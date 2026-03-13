@@ -1,33 +1,38 @@
-
-
 import sys
 import io
+from UniFun import clean
 
 sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8")
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 
-def clean(line):
-    return " ".join(line.strip().split())
-
 def main():
-    lines = sys.stdin.readlines()
-    start = 0
+    startBook = False
+    prviousLine = False
+    inFile = True
+    bufor = ""
 
-    for i in range(min(10, len(lines)-1)):
+    while inFile:
 
-        if lines[i].strip() == "" and lines[i+1].strip() == "":
-            start = i + 2
-            break
+        char = sys.stdin.read(1)
+        if char == "":
+            if startBook and bufor:
+                print(clean(bufor))
+            inFile = False
 
-    for line in lines[start:]:
-        if line.strip() == "":
-            print()
+        if char == "\n":
+            if startBook:
+                print(clean(bufor)) if bufor.strip() != "" else print()
+            else:
+                if bufor.strip() == "" and prviousLine:
+                    startBook = True
+                prviousLine = (bufor.strip() == "")
+            bufor = ""
         else:
-            print(clean(line))
+            bufor += char
+
+
+
 
 if __name__ == "__main__":
     main()
-
-
-
