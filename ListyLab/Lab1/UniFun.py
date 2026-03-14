@@ -37,6 +37,7 @@ def readSentence(char_stream):
         elif char == "\n" and prev_char == "\n":
             if buffer.strip() != "":
                 yield clean(buffer)
+            yield "\n"
             buffer = ""
             
         prev_char = char

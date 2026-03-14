@@ -12,6 +12,7 @@ def extract():
     buffer = ""
     earlyBuffer = ""
     lineCount = 0
+    cleaned = ""
 
     for char in readStream():
         if char =="\n":

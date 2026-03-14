@@ -17,10 +17,15 @@ def countWords(sentence: str) -> int:
 
 def print_short(sentenceStream):
     for sentence in sentenceStream:
+                #informacja o akapicie
+        if sentence == "\n":
+            sys.stdout.write("\n") 
+            continue
+        
         if countWords(sentence) <= 4:
-            sys.stdout.write(sentence)
+            sys.stdout.write(sentence+"\n")
 
-    return "W tekscie nie znaleziono oczekiwanego zdania"
+    return ""
 
 def main():
     print_short(readSentence(readStream()))

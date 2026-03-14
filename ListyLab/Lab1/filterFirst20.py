@@ -1,12 +1,20 @@
 
 import sys
 
-from ListyLab.Lab1.UniFun import readSentence, readStream
+from UniFun import readSentence, readStream
 
 
 def print_sentences(sentenceStream):
-    for sentence in sentenceStream in range(20):
-        sys.stdout.write(sentence)
+    count = 0
+    for sentence in sentenceStream:
+        #informacja o akapicie
+        if sentence == "\n":
+            sys.stdout.write("\n") 
+            continue
+
+        if count >= 20: break
+        sys.stdout.write(sentence + "\n")
+        count += 1
 
 def main():
     print_sentences(readSentence(readStream()))

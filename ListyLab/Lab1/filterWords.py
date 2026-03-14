@@ -1,5 +1,5 @@
 import sys
-from UniFun import read_sentence, read_stream
+from UniFun import readStream, readSentence
 
 def containsWords(sentence: str) -> bool:
     validWords = "/i/oraz/ale/że/lub/"
@@ -25,6 +25,11 @@ def containsWords(sentence: str) -> bool:
 
 def print_sentences(sentenceStream):
     for sentence in sentenceStream:
+                #informacja o akapicie
+        if sentence == "\n":
+            sys.stdout.write("\n") 
+            continue
+        
         if not sentence:
             continue
             
@@ -32,7 +37,7 @@ def print_sentences(sentenceStream):
             sys.stdout.write(sentence + "\n")
 
 def main():
-    print_sentences(read_sentence(read_stream()))
+    print_sentences(readSentence(readStream()))
 
 if __name__ == "__main__":
     main()

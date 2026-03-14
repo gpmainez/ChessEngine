@@ -8,7 +8,7 @@ def getFirst(sentenceStream):
     for sentence in sentenceStream:
         if isValid(sentence): return sentence
 
-    return "W tekscie nie znaleziono oczekiwanego zdania"
+    return ""
 
 def main():
     sentence = getFirst(readSentence(readStream()))

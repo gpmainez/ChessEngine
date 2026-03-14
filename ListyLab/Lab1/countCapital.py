@@ -1,5 +1,5 @@
 import sys
-from ListyLab.Lab1.UniFun import readSentence, readStream
+from UniFun import readSentence, readStream
 
 def hasCapitalWord(sentence):
     wordCount = 0
@@ -21,6 +21,9 @@ def percentOfSentences():
     total = 0
     withCapital = 0
     for sentence in readSentence(readStream()):
+        if sentence == "\n":
+            continue
+
         total += 1
         if hasCapitalWord(sentence):
             withCapital += 1
