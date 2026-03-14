@@ -1,31 +1,23 @@
 import sys
+from UniFun import readStream
 
-
-def pararg():
+def countPar():
     count = 0
     PrevEmptyLine = False
     bufor = ""
-    inFile = True
 
-    while inFile:
-        char = sys.stdin.read(1)
-
-        if char == "":
-            inFile = False  # liczyc ostani wiersz jako akapit?
-
-
+    for char in readStream():
         if char == "\n":
             if bufor.strip() == "":
-                PrevEmptyLine = True
-            else:
                 if PrevEmptyLine:
                     count += 1
+                PrevEmptyLine = True
+            else:
                 PrevEmptyLine = False
             bufor = ""
         else:
             bufor += char
-    print(count)
 
 
 if __name__ == "__main__":
-    pararg()
+    countPar()
