@@ -24,22 +24,28 @@ def readStream():
         except IOError: break
 
 def readSentence(char_stream):
-
     buffer = ""
     prev_char = ""
+    
     for char in char_stream:
-        buffer += char
-
-        if char in ".!?": #kon zdania
-            yield clean(buffer)
-            buffer = ""
-        elif char == "\n" and prev_char == "\n":
+        #koniec akapitu
+        if char == "\n" and prev_char == "\n":
             if buffer.strip() != "":
                 yield clean(buffer)
             yield "\n"
             buffer = ""
+            prev_char = char
+            continue
+
+        #yieldujemy dopiero jak dotrzemy do nowego zdania, a nie jak znajdziemy znak interpunkcujny, dzieki temu zabezpieczamy sie na ... iraz ?!
+        if prev_char in ".!?" and char not in ".!?":
+            if buffer.strip() != "":
+                yield clean(buffer)
+            buffer = ""
             
+        buffer += char
         prev_char = char
-       #zabezpieczenie ostanie zdanie
+        
+    #fallback
     if buffer.strip() != "":
-        yield clean(buffer)     
+        yield clean(buffer)

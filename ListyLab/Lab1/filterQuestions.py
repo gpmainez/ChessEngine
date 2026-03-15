@@ -3,6 +3,7 @@ from UniFun import readSentence, readStream
 
 
 def isValid(sentence):
+    if not sentence: return False
     if(sentence[-1] in "?!"): return True
     return False
 
