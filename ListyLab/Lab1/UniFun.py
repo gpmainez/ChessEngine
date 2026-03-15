@@ -29,11 +29,10 @@ def readSentence(char_stream):
     prev_char = ""
     for char in char_stream:
         buffer += char
-        #znak interpunkcyjny konczy zdanie
-        if char in ".!?":
+
+        if char in ".!?": #kon zdania
             yield clean(buffer)
             buffer = ""
-            #pusta linia tez konczy zdanie
         elif char == "\n" and prev_char == "\n":
             if buffer.strip() != "":
                 yield clean(buffer)
@@ -41,6 +40,6 @@ def readSentence(char_stream):
             buffer = ""
             
         prev_char = char
-       #zabezpieczenie 
+       #zabezpieczenie ostanie zdanie
     if buffer.strip() != "":
         yield clean(buffer)     

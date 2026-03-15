@@ -14,10 +14,10 @@ def countWords(sentence: str) -> int:
             inWord = False
             
     return wordCount
-
+#jedyne co to jak traktowac liczbe w srodku zdania -> firma ma 67 filii extra -- czy 67 to slowo czy nie?
 def print_short(sentenceStream):
     for sentence in sentenceStream:
-                #informacja o akapicie
+        #informacja o akapicie
         if sentence == "\n":
             sys.stdout.write("\n") 
             continue

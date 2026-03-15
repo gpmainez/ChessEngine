@@ -22,7 +22,7 @@ def containsWords(sentence: str) -> bool:
             matches += 1
 
     return matches >= 2
-
+#nie dziala że -> Idzie i żre tak, że cos tam prawdopobnie problem z polskimi znakami w pliku
 def print_sentences(sentenceStream):
     for sentence in sentenceStream:
                 #informacja o akapicie

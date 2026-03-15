@@ -6,6 +6,7 @@ def countChars():
         if not char.isspace():
             count += 1
     return count
+
 def main ():
     numChars = countChars()
     print(numChars)

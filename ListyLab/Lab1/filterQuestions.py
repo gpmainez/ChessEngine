@@ -15,7 +15,9 @@ def print_sentences(sentenceStream):
 
         if isValid(sentence):
             sys.stdout.write(sentence +"\n")
-
+#jedyne co to ze jesli nw plik bedzie zle zformatowany i amsz linie z samymi ????? np to wysweitli
+#i taka juz mocna chamowa jesli jest cytat konczocy sie znakiem zapytania to nie wysweitlasz koncu cytatu
+# iz  tego robi sie klopot w takim przypadku Kto tam? – zapytał.
 def main():
     print_sentences(readSentence(readStream()))
 

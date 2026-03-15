@@ -1,4 +1,6 @@
+import sys
 from UniFun import readSentence, readStream
+
 def isValid(sentence):
     inWord = False
     prevFirstChar = ""
@@ -7,15 +9,18 @@ def isValid(sentence):
         if char.isalpha():
             if not inWord:
                 inWord = True
-                if char.lower() == prevFirstChar.lower(): return False
+                if char.lower() == prevFirstChar.lower():
+                    return False
                 prevFirstChar = char
-        else: inWord = False
+        else:
+            inWord = False
 
     return True
             
 def findLongestUnique(sentenceStream):
     longest = 0
     longestSentence = ""
+
     for sentence in sentenceStream:
         currentLength = len(sentence)
         if isValid(sentence) and currentLength > longest:

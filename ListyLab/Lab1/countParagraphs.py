@@ -1,27 +1,29 @@
 import sys
 from UniFun import readStream
 
+
 def countPar():
     count = 0
-    paragraph_active = False
+    inParagraph = False
     bufor = ""
 
     for char in readStream():
         if char == "\n":
-            if bufor.strip() == "":
-                if paragraph_active:
+            if bufor.strip() != "":
+                if inParagraph:
                     count += 1
-                    paragraph_active = False
+                    inParagraph = False
             else:
-                paragraph_active = True
+                inParagraph = True
+
             bufor = ""
         else:
             bufor += char
 
-    #fallback
-    if paragraph_active or bufor.strip() != "":
+    #jesli nie endline
+    if bufor.strip() != "" and not inParagraph:
         count += 1
-        
+
     return count
 
 def main():
