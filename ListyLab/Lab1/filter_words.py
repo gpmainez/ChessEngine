@@ -1,27 +1,28 @@
 import sys
-from UniFun import readStream, readSentence
+from uni_fun import read_stream, read_sentence
 
-def containsWords(sentence: str) -> bool:
-    validWords = "/i/oraz/ale/że/lub/"
+def contains_words(sentence: str) -> bool:
+    valid_words = "/i/oraz/ale/że/lub/"
     matches = 0
-    currentWord = ""
+    current_word = ""
     
     for char in sentence:
         if char.isalpha():
-            currentWord += char.lower()
+            current_word += char.lower()
         else:
-            if currentWord:
-                if "/" + currentWord + "/" in validWords:
+            if current_word:
+                if "/" + current_word + "/" in valid_words:
                     matches += 1
                     if matches >= 2:
                         return True
-                currentWord = ""
+                current_word = ""
      #fallback           
-    if currentWord:
-        if "/" + currentWord + "/" in validWords:
+    if current_word:
+        if "/" + current_word + "/" in valid_words:
             matches += 1
 
     return matches >= 2
+
 #nie dziala że -> Idzie i żre tak, że cos tam prawdopobnie problem z polskimi znakami w pliku
 def print_sentences(sentenceStream):
     for sentence in sentenceStream:
@@ -33,11 +34,11 @@ def print_sentences(sentenceStream):
         if not sentence:
             continue
             
-        if containsWords(sentence):
+        if contains_words(sentence):
             sys.stdout.write(sentence + "\n")
 
 def main():
-    print_sentences(readSentence(readStream()))
+    print_sentences(read_sentence(read_stream()))
 
 if __name__ == "__main__":
     main()

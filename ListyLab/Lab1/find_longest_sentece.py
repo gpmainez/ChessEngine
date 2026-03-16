@@ -1,4 +1,4 @@
-from UniFun import readSentence, readStream
+from uni_fun import read_sentence, read_stream
 
 def find_longest_sentence(sentence_stream):
     longest = 0
@@ -23,7 +23,7 @@ def find_longest_sentence(sentence_stream):
 #jak sa 2 najduzsze to czy wypisywaoc oba? na rzie wypisujesz pierwsze
 
 def main():
-    result = find_longest_sentence(readSentence(readStream()))
+    result = find_longest_sentence(read_sentence(read_stream()))
     print(result)
 
 if __name__ == "__main__":

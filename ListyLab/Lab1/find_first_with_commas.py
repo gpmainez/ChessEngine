@@ -1,12 +1,12 @@
-from UniFun import readStream, readSentence
+from uni_fun import read_stream, read_sentence
 
-def isValid(sentence):
+def is_valid(sentence):
     if sentence.count(",") > 1: return True #nie wystarczy imo
     return False
 
-def getFirst(sentenceStream):
+def get_first(sentenceStream):
     for sentence in sentenceStream:
-        if isValid(sentence): return sentence
+        if is_valid(sentence): return sentence
 
     return ""
 #liczysz chyba przecinki czyli wyliczanie blednie ci zaznaczy jakko zdanie podzredne np
@@ -14,7 +14,7 @@ def getFirst(sentenceStream):
 #tak samo gdy przecinek to separator liczb 10 np 67,67
 
 def main():
-    sentence = getFirst(readSentence(readStream()))
+    sentence = get_first(read_sentence(read_stream()))
     print(sentence)
 
 if __name__ == "__main__":

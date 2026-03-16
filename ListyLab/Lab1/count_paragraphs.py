@@ -1,33 +1,33 @@
 import sys
-from UniFun import readStream
+from uni_fun import read_stream
 
 
-def countPar():
+def count_par():
     count = 0
-    inParagraph = False
+    in_paragraph = False
     bufor = ""
 
-    for char in readStream():
+    for char in read_stream():
         if char == "\n":
             if bufor.strip() != "":
-                if inParagraph:
+                if in_paragraph:
                     count += 1
-                    inParagraph = False
+                    in_paragraph = False
             else:
-                inParagraph = True
+                in_paragraph = True
 
             bufor = ""
         else:
             bufor += char
 
     #jesli nie endline
-    if bufor.strip() != "" and not inParagraph:
+    if bufor.strip() != "" and not in_paragraph:
         count += 1
 
     return count
 
 def main():
-    result = countPar()
+    result = count_par()
     sys.stdout.write(str(result) + "\n")
 
 if __name__ == "__main__":

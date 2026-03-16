@@ -14,7 +14,7 @@ def clean(line):
     return result.strip()
 
 
-def readStream():
+def read_stream():
     while True:
         try:
             char = sys.stdin.read(1)
@@ -23,7 +23,7 @@ def readStream():
 
         except IOError: break
 
-def readSentence(char_stream):
+def read_sentence(char_stream):
     buffer = ""
     prev_char = ""
     

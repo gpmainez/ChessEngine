@@ -1,7 +1,7 @@
 
 import sys
 
-from UniFun import readSentence, readStream
+from uni_fun import read_sentence, read_stream
 
 
 def print_sentences(sentenceStream):
@@ -17,7 +17,7 @@ def print_sentences(sentenceStream):
         count += 1
 
 def main():
-    print_sentences(readSentence(readStream()))
+    print_sentences(read_sentence(read_stream()))
 
 
 if __name__ == "__main__":
