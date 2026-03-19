@@ -1,8 +1,8 @@
-import sys
+import sys,os
 from uni_fun import read_stream, read_sentence
 
 def contains_words(sentence: str) -> bool:
-    valid_words = "/i/oraz/ale/że/lub/"
+    valid_words = "/i/oraz/ale/że/lub/" 
     matches = 0
     current_word = ""
     
@@ -23,7 +23,6 @@ def contains_words(sentence: str) -> bool:
 
     return matches >= 2
 
-#nie dziala że -> Idzie i żre tak, że cos tam prawdopobnie problem z polskimi znakami w pliku
 def print_sentences(sentenceStream):
     for sentence in sentenceStream:
                 #informacja o akapicie
@@ -38,7 +37,11 @@ def print_sentences(sentenceStream):
             sys.stdout.write(sentence + "\n")
 
 def main():
-    print_sentences(read_sentence(read_stream()))
-
+    try:    
+        print_sentences(read_sentence(read_stream()))
+        sys.stdout.flush()
+        os._exit(0)
+    except (BrokenPipeError, OSError):
+        os._exit(0)
 if __name__ == "__main__":
     main()

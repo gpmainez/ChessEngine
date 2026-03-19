@@ -1,6 +1,7 @@
 import sys
 import io
 from uni_fun import clean, read_stream
+import os
 
 sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8")
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
@@ -52,9 +53,13 @@ def extract():
 
 
 def main():
-    for line in extract():
-        sys.stdout.write(line)
+    try:
+        for line in extract():
+            sys.stdout.write(line)
+        sys.stdout.flush()
+        os._exit(0)
+    except (BrokenPipeError, OSError):
 
-
+        os._exit(0)
 if __name__ == "__main__":
     main()

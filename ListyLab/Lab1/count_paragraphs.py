@@ -1,3 +1,4 @@
+import os
 import sys
 from uni_fun import read_stream
 
@@ -28,7 +29,12 @@ def count_par():
 
 def main():
     result = count_par()
-    sys.stdout.write(str(result) + "\n")
+    try:
+        sys.stdout.write(str(result) + "\n")
+        sys.stdout.flush()
+        os._exit(0)
+    except (BrokenPipeError, OSError):
+        os._exit(0)
 
 if __name__ == "__main__":
     main()

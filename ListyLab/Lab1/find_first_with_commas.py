@@ -1,7 +1,10 @@
+import os
+import sys
+
 from uni_fun import read_stream, read_sentence
 
 def is_valid(sentence):
-    if sentence.count(",") > 1: return True #nie wystarczy imo
+    if sentence.count(",") > 1: return True
     return False
 
 def get_first(sentenceStream):
@@ -9,13 +12,15 @@ def get_first(sentenceStream):
         if is_valid(sentence): return sentence
 
     return ""
-#liczysz chyba przecinki czyli wyliczanie blednie ci zaznaczy jakko zdanie podzredne np
-#firma to ula, Ola. -> zwroci a to nie ma zdanai podrzednego chyba ze nie ogarniam
-#tak samo gdy przecinek to separator liczb 10 np 67,67
 
 def main():
     sentence = get_first(read_sentence(read_stream()))
-    print(sentence)
+    try:
+        sys.stdout.write(sentence + "\n")
+        sys.stdout.flush()
+        os._exit(0)
+    except (BrokenPipeError, OSError):
+        os._exit(0)
 
 if __name__ == "__main__":
     main()

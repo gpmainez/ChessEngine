@@ -1,5 +1,6 @@
 import sys
-from UniFun import read_sentence, read_stream
+import os
+from uni_fun import read_sentence, read_stream
 
 
 def is_valid(sentence):
@@ -19,8 +20,12 @@ def print_sentences(sentenceStream):
 
 
 def main():
-    print_sentences(read_sentence(read_stream()))
-
+    try: 
+        print_sentences(read_sentence(read_stream()))
+        sys.stdout.flush()
+        os._exit(0)
+    except (BrokenPipeError, OSError):
+        os._exit(0)
 
 if __name__ == "__main__":
     main()

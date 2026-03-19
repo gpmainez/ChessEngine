@@ -1,3 +1,4 @@
+import os
 import sys
 from uni_fun import read_sentence, read_stream
 
@@ -30,7 +31,12 @@ def find_longest_unique(sentenceStream):
 
 def main():
     sentence = find_longest_unique(read_sentence(read_stream()))
-    print(sentence)
+    try:
+        sys.stdout.write(sentence + "\n")
+        sys.stdout.flush()
+        os._exit(0)
+    except (BrokenPipeError, OSError):
+        os._exit(0)
 
 if __name__ == "__main__":
     main()

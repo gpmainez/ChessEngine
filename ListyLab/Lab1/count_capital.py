@@ -1,3 +1,4 @@
+import os
 import sys
 from uni_fun import read_sentence, read_stream
 
@@ -33,7 +34,12 @@ def percent_of_sentences():
 
 def main():
     result = percent_of_sentences()
-    print(result)
+    try:
+        sys.stdout.write(f"{result:.2f}\n")
+        sys.stdout.flush()
+        os._exit(0)
+    except (BrokenPipeError, OSError):
+        os._exit(0)
 
 if __name__ == "__main__":
     main()
