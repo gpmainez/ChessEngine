@@ -82,7 +82,6 @@ def count_by_method(log):
 
 
 if __name__ == '__main__':
-    import datetime
 
     t1 = datetime.datetime.fromtimestamp(1000)
     t2 = datetime.datetime.fromtimestamp(2000)

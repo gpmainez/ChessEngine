@@ -47,7 +47,6 @@ def get_most_active_session(log_dict):
 
 
 if __name__ == '__main__':
-    import datetime
 
     t1 = datetime.datetime.fromtimestamp(1000)
     t2 = datetime.datetime.fromtimestamp(2000)

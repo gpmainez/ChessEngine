@@ -1,3 +1,4 @@
+import datetime
 
 def get_top_uris(log, n=10):
     if not isinstance(log, list) or not isinstance(n, int) or n <= 0:
@@ -82,7 +83,7 @@ def log_to_dict(log):
 
 
 if __name__ == '__main__':
-    import datetime
+
 
     t1 = datetime.datetime.fromtimestamp(1000)
     t2 = datetime.datetime.fromtimestamp(2000)
