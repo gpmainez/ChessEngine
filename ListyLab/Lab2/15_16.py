@@ -44,3 +44,43 @@ def get_most_active_session(log_dict):
     except TypeError:
         return None
 
+
+
+if __name__ == '__main__':
+    import datetime
+
+    t1 = datetime.datetime.fromtimestamp(1000)
+    t2 = datetime.datetime.fromtimestamp(2000)
+    t3 = datetime.datetime.fromtimestamp(3000)
+
+    mock_log_dict = {
+        "ula": [
+            {"ts": t1, "orig_ip": "26.26.26.26", "method": "GET", "status": 200},
+            {"ts": t2, "orig_ip": "26.26.26.26", "method": "POST", "status": 404}
+        ],
+        "ola": [
+            {"ts": t1, "orig_ip": "67.67.67.67", "method": "GET", "status": 200},
+            {"ts": t2, "orig_ip": "67.67.67.67", "method": "GET", "status": 200},
+            {"ts": t3, "orig_ip": "67.67.67.67", "method": "HEAD", "status": 500}
+        ],
+        "adrian": [
+            {"ts": t3, "orig_ip": "26.26.26.26", "method": "PUT", "status": 403}
+        ]
+    }
+
+    print("Zad 15 - 16\n")
+
+    print("Zad 15 Statystyki sesji:")
+
+    print_dict_entry_dates(mock_log_dict)
+    
+    print("\n[Haczyki Zad 15 - puste i bledne dane]")
+    print_dict_entry_dates({})
+    print_dict_entry_dates("to_nie_jest_slownik")
+
+    print("\nZad 16 Najaktywniejsza sesja:")
+    active = get_most_active_session(mock_log_dict)
+    print("Najaktywniejszy uid (powinna byc ola, bo ma 3 wpisy):", active)
+    print("Czy poprawnie wybrano ola:", active == "ola")
+    print("Pusty slownik:", get_most_active_session({}))
+    print("Zly typ danych:", get_most_active_session(["brak", "danych"]))

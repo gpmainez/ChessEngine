@@ -79,3 +79,46 @@ def log_to_dict(log):
 
     return sessions
 
+
+
+if __name__ == '__main__':
+    import datetime
+
+    t1 = datetime.datetime.fromtimestamp(1000)
+    t2 = datetime.datetime.fromtimestamp(2000)
+
+    # (ts, uid, id_orig_h, id_orig_p, id_resp_h, id_resp_p, method, host, uri, status_code)
+    test_logs = [
+        (t1, "ula", "26.26.26.26", 123, "10.0.0.1", 80, "GET", "firma.pl", "/index.html", 200),
+        (t1, "ula", "26.26.26.26", 124, "10.0.0.1", 80, "GET", "firma.pl", "/style.css", 200),
+        (t2, "gaba", "67.67.67.67", 125, "10.0.0.1", 80, "POST", "gaba.com", "/dane", 404),
+        (t2, "adrian", "67.67.67.67", 126, "10.0.0.1", 80, "GET", "gaba.com", "/index.html", 500),
+        (t2, "wyrus", "26.26.26.26", 127, "10.0.0.1", 80, "HEAD", "firma.pl", "/kreda.jpg", 301),
+    ]
+
+    print("Zad 11 - 14\n")
+
+    print("Zad 11 Najczestsze URI:")
+    top_uris = get_top_uris(test_logs, 2)
+    print("Top 2 URI:", top_uris)
+    print("Czy /index.html wygrywa (2 wystapienia):", top_uris[0][0] == "/index.html")
+    print("Zle dane n=0:", get_top_uris(test_logs, 0))
+
+    print("\nZad 12 Rozklad kodow HTTP:")
+    classes = count_status_classes(test_logs)
+    print("Klasy statusow:", classes)
+    print("Czy 2xx ma 2 wystapienia:", classes.get("2xx") == 2)
+    print("Czy 4xx ma 1 wystapienie:", classes.get("4xx") == 1)
+
+    print("\nZad 13 Zamien krotke na slownik:")
+    entry_dict = entry_to_dict(test_logs[0])
+    print("Pojedynczy wpis slownika ula:", entry_dict)
+    print("Czy poprawnie zmapowalo uid:", entry_dict.get("uid") == "ula")
+    print("Pusta lub zla krotka:", entry_to_dict(("zla_krotka",)))
+
+    print("\nZad 14 Zamien log na slownik sesji:")
+    sessions = log_to_dict(test_logs)
+    print("Klucze sesji (uid):", list(sessions.keys()))
+    print("Czy ula ma 2 wpisy w liscie:", len(sessions.get("ula", [])) == 2)
+    print("Czy gaba ma 1 wpis:", len(sessions.get("gaba", [])) == 1)
+    print("Zle dane wejsciowe:", log_to_dict("to nie jest lista"))
