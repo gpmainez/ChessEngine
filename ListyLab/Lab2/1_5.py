@@ -42,3 +42,67 @@ def read_log(input_stream=None):
             continue
 
     return parsed_logs
+
+
+def sort_log(log, index):
+    if not isinstance(log, list):
+        return []
+    try:
+        return sorted(log, key=lambda x: x[index])
+    except IndexError:
+        return log
+
+
+def get_entries_by_code(log, code):
+    if not isinstance(log, list):
+        return []
+    try:
+        target_code = int(code)
+    except (ValueError, TypeError):
+        return []
+
+    return [entry for entry in log if entry[9] == target_code]
+
+
+def is_valid_ipv4(ip_str):
+    parts = ip_str.split('.')
+    if len(parts) != 4:
+        return False
+    for part in parts:
+        if not part.isdigit() or not (0 <= int(part) <= 255):
+            return False
+    return True
+
+
+def get_entries_by_addr(log, addr):
+    if not isinstance(log, list):
+        return []
+
+    is_ip = is_valid_ipv4(addr)
+
+    if is_ip:
+        return [entry for entry in log if entry[2] == addr]
+    else:
+        return [entry for entry in log if entry[7] == addr]
+
+
+def get_failed_reads(log, merge = False):
+    if not isinstance(log, list):
+        return [] if merge else ([], [])
+
+    list_4xx = []
+    list_5xx = []
+    for entry in log:
+        code = entry[9]
+        if isinstance(code, int):
+            if 400 <= code < 500:
+                list_4xx.append(entry)
+            elif 500 <= code < 600:
+                list_5xx.append(entry)
+
+    if merge:
+        return list_4xx + list_5xx
+    else:
+        return list_4xx, list_5xx
+
+

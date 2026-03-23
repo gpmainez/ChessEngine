@@ -35,4 +35,12 @@ def print_dict_entry_dates(log_dict):
         ratio = codes_2xx / req_count
         print(f"2xx ratio: {ratio:.2f} ({codes_2xx}/{req_count})")
 
+def get_most_active_session(log_dict):
+    if not isinstance(log_dict, dict) or not log_dict:
+        return None
+
+    try:
+        return max(log_dict, key=lambda uid: len(log_dict[uid]))
+    except TypeError:
+        return None
 

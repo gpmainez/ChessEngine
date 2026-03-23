@@ -48,7 +48,7 @@ def detect_sus(log, threshold):
 
     return sus_ips
 
-#alternatywa dla tego def_sus
+# alternatywa dla tego def_sus
 # def detect_sus(log, threshold):
 #     if not isinstance(log, list) or not isinstance(threshold, (int, float)) or threshold <= 0:
 #         return []
@@ -72,10 +72,10 @@ def detect_sus(log, threshold):
 #
 #         except IndexError:
 #             continue
-
-    sus_ips = []
-    for ip, stats in ip_stats.items():
-        if stats['total'] >= threshold or stats['errors_404'] >= (threshold / 2):
-            sus_ips.append(ip)
-
-    return sus_ips
+#
+#     sus_ips = []
+#     for ip, stats in ip_stats.items():
+#         if stats['total'] >= threshold or stats['errors_404'] >= (threshold / 2):
+#             sus_ips.append(ip)
+#
+#     return sus_ips
