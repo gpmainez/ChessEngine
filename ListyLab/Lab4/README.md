@@ -16,7 +16,9 @@ javac src\Paradygmaty\streamFun\statistics.jav
 ale sczerze mowiąc nie mam sił tego zmieniać na pythona sczególnie że działa
 
 wiec jesli potrzbujesz do czegoś tego czwartego to kod javovy masz w
-### javaCode.txt
+*javaCode.txt*
 
 testowałem jakie podatwowe przypadki i chodzi
+## *pliki do testowania*
+masz w folderze tests
 
