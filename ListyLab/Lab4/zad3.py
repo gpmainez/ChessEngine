@@ -3,9 +3,6 @@ import os
 import collections
 import time
 
-from pandocfilters import Null
-
-
 def tail():
     n_lines = 10
     file_path = None
