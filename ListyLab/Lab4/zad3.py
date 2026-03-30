@@ -39,7 +39,7 @@ def tail():
                     time.sleep(0.1)
                     continue
             print(line, end="")
-        except KeyboardInterrupt:#ctrl c na przeweanie apparently to tak dziala
+        except KeyboardInterrupt:#ctrl c na przeweanie 
             pass
 
 
