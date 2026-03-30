@@ -38,8 +38,7 @@ def tail():
                 if not line:
                     time.sleep(0.1)
                     continue
-                print(line, end="") #musi byc wewnatrz whike bo nigdy nie wyjdzie poza to while przeciez
-                
+            print(line, end="")
         except KeyboardInterrupt:#ctrl c na przeweanie apparently to tak dziala
             pass
 
