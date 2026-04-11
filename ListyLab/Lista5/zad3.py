@@ -14,27 +14,22 @@ def get_adresses(path, city):
                 wojew = row["Województwo"]
                 adres = row["Adres"]
 
-                if adres != "":
-                    result = pattern.search(adres)
+                result = pattern.search(adres)
 
-                    if result:
-                        street = result.group()[1]
-                        number = result.group()[2]
-                    else:
-                        street = adres
-                        number = ""
+                if result:
+                    street = result.group()[1]
+                    number = result.group()[2]
                 else:
-                    street = ""
+                    street = adres
                     number = ""
 
                 mytuple = (wojew, city, street, number)
-
                 adresses.append(mytuple)
 
-    return adresses
+        return adresses
 
 
-my_list = get_adresses("stacje.csv", "Głogów")
+my_list = get_adresses("stacje.csv", "Solec Zdrój")
 num = 0
 
 for i in my_list:
