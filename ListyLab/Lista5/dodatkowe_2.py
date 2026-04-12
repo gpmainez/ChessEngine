@@ -93,7 +93,7 @@ def detect_anomalies(measurements, jump_threshold=2.0, alarm_threshold=5.0, max_
                             "msg": f"Nagły skok o {delta:.2f} (z {float(prev_val):.2f} na {val_float:.2f})."
                         })
 
-            #prog alarmowy (jakis tam trheshold)
+            #prog alarmowy 
             if val_float > alarm_threshold:
                 #tylko unikalne zmiany (pomiar moze byc taki sam przez tydzien jesli meirzony jest raz na tydzien)
                 if i == 0 or float(data[i - 1][1] or 0) != val_float:

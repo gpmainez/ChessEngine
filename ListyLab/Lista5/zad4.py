@@ -31,7 +31,6 @@ def get_locations(path):
     with open(path, encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
 
-        # jakos warunek ze miedzy 0 a 90
         pattern = re.compile(r"^-?\d+\.\d{6}$")
         locations = []
 
