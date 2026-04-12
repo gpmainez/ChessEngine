@@ -20,5 +20,5 @@ def parse_file(filename):
             data.append(row)
 
     return data
-
-data = parse_file('stacje.csv')
+if __name__ == '__main__':
+    data = parse_file('stacje.csv')
