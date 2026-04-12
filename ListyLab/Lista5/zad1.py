@@ -9,6 +9,7 @@ def parse_file(filename):
         for row in reader:
             # debug na wszelki niech zostanie
             # kurcznie neiw idzlaem ze python ma tak przyjemny strumien albo to format pliku chuj wi tbh
+            #uwierz lub nie ale tez jak korzystasz z biblioteki pandas to normalnie mozesz jak w R dataframe i tez gra OLA OLA EJ!
             id = row['Nr']
             code = row['Kod stacji']
             inter_code = row['Kod międzynarodowy']
