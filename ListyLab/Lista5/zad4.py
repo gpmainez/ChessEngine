@@ -1,5 +1,6 @@
 import csv
 import re
+from datetime import datetime
 from pathlib import Path
 from unittest import result
 
@@ -15,11 +16,13 @@ def get_dates(path):
             date = row["Data uruchomienia"]
             close_date = row["Data zamknięcia"]
 
-            if pattern.search(date):
-                output.add(date)
-
-            if pattern.search(close_date):
-                output.add(close_date)
+            for d in (date, close_date):
+                if d and pattern.search(d):
+                    try:
+                        datetime.strptime(d, "%Y-%m-%d")
+                        output.add(d)
+                    except ValueError:
+                        pass
 
         return output
 
@@ -36,11 +39,11 @@ def get_locations(path):
             lat_str = row["WGS84 φ N"]
             lon_str = row["WGS84 λ E"]
 
-            if pattern.match(lat_str) and pattern.match(lon_str):
+            if lon_str and lat_str and pattern.match(lat_str) and pattern.match(lon_str):
                 lat = float(lat_str)
                 lon = float(lon_str)
 
-                if -90 <= lat <= 90 and -180 <= lon <= 180:
+                if -90.0 <= lat <= 90.0 and -180.0 <= lon <= 180.0:
                     locations.append((lat, lon))
 
         return locations
@@ -54,9 +57,10 @@ def get_werid_name_stations(path):
         stations = []
         for row in reader:
             name = row["Nazwa stacji"]
-            result = pattern.search(name)
-            if result:
-                stations.append(result.group())
+            if name and pattern.match(name):
+                result = pattern.search(name)
+                if result:
+                    stations.append(result.group())
 
         return stations
 
@@ -77,11 +81,10 @@ def change_spaces(path):
 
         for row in reader:
             name = row["Nazwa stacji"]
-            name = pattern.sub("_", name)
-
-            name = pattern_dict.sub(lambda match: dict[match.group()], name)
-
-            cleaned_stations.append(name)
+            if name:
+                name = pattern.sub("_", name)
+                name = pattern_dict.sub(lambda match: dict[match.group()], name)
+                cleaned_stations.append(name)
 
     return cleaned_stations
 
@@ -97,9 +100,9 @@ def mob_ending_stations(path):
             id = row["Nr"]
             code = row["Kod stacji"]
             typee = row["Rodzaj stacji"]
-
-            code_result = pattern.search(code)
-            typee_result = pattern_type.search(typee)
+            if code and typee:
+                code_result = pattern.search(code)
+                typee_result = pattern_type.search(typee)
 
             if code_result:
 
@@ -122,7 +125,7 @@ def separated_locations(path):
         for row in reader:
             name = row["Nazwa stacji"]
 
-            if pattern.match(name):
+            if name and pattern.match(name):
                 stations.append(name.strip())
 
         return stations
@@ -137,7 +140,7 @@ def stacje_z_ulica(path):
         for row in reader:
             name = row["Nazwa stacji"]
 
-            if pattern.search(name):
+            if name and pattern.search(name):
                 stations.append(name.strip())
 
         return stations
