@@ -28,10 +28,15 @@ def get_adresses(path, city):
 
         return adresses
 
-if __name__ == '__main__':
-    my_list = get_adresses("stacje.csv", "Solec Zdrój")
-    num = 0
 
-    for i in my_list:
-        num += 1
-        print(f"num: {num} add: {i}")
+my_list = get_adresses("stacje.csv", "Głogów")
+my_list2 = get_adresses("wrong_path", "Bielawa")
+num = 0
+
+for i in my_list:
+    num += 1
+    print(f"num: {num} add: {i}")
+
+for i in my_list2:
+    num += 1
+    print(f"num: {num} add: {i}")
