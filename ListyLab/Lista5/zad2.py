@@ -22,7 +22,7 @@ def group_measurement_files_by_key(path):
 measurement_files = Path("measurements")
 results = group_measurement_files_by_key(measurement_files)
 num = 0
-
-for key, path in results.items():
-    num += 1
-    print(f"num: {num} k: {key} |||| f: {path}")
+if __name__ == '__main__':
+    for key, path in results.items():
+        num += 1
+        print(f"num: {num} k: {key} |||| f: {path}")
