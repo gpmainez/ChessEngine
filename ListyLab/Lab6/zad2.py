@@ -48,7 +48,7 @@ class TimeSeries:
     def missing_count(self):
         return self.values.count(None)
 
-    @propety
+    @property
     def completeness(self):
         total = len(self.values)
         missing = self.missing_count
@@ -70,7 +70,7 @@ print(ts[0:2])
 print(ts[datetime.datetime(2026, 4, 20)])
 print(ts[datetime.date(2026, 4, 20)])
 print(f"missing count: {ts.missing_count}")
-print(f"completness: {ts.completeness()}%")
+print(f"completness: {ts.completeness}%")
 try:
     print(ts[datetime.date(2026, 4, 30)])
 except KeyError:

@@ -73,7 +73,9 @@ class Measurements:
             next(reader)  # Wiersz 6: Kod stanowiska
 
             dates = []
-            values_per_station = {station: [] for station in station_codes}
+            values_per_station = {}
+            for station in station_codes:
+                values_per_station[station] = []
 
             for row in reader:
                 if not row: continue
@@ -97,7 +99,7 @@ class Measurements:
                 )
                 self._loaded_series.append(ts)
 
-        # Zaznaczamy plik jako wczytany
+        # plik wczytany
         self._loaded_files.add(file_path)
 
     def get_by_parameter(self, parameter_name: str) -> list['TimeSeries']:
