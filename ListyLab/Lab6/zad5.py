@@ -75,11 +75,9 @@ class Measurements:
             dates = []
             values_per_station = {station: [] for station in station_codes}
 
-            # --- Właściwe czytanie pomiarów ---
             for row in reader:
                 if not row: continue
 
-                # Format daty dopasowany do Twojego pliku: 01/16/23 12:00
                 date_val = datetime.strptime(row[0], "%m/%d/%y %H:%M")
                 dates.append(date_val)
 
@@ -92,10 +90,10 @@ class Measurements:
                 ts = TimeSeries(
                     nazwa_wskaznika=parameter_name,
                     kod_stacji=station,
-                    czas_usredniania=czas_usredniania,  # Automatycznie z pliku
+                    czas_usredniania=czas_usredniania,
                     dates=dates.copy(),
                     values=values_per_station[station],
-                    unit=jednostka  # Automatycznie z pliku
+                    unit=jednostka
                 )
                 self._loaded_series.append(ts)
 
@@ -107,7 +105,6 @@ class Measurements:
             for file_info in self._file_catalog[parameter_name]:
                 self._load_file_to_memory(file_info['path'], parameter_name)
 
-        # Poprawka: uzywamy .nazwa_wskaznika zamiast .name
         return [ts for ts in self._loaded_series if ts.nazwa_wskaznika == parameter_name]
 
     def get_by_station(self, station_code: str) -> list['TimeSeries']:
@@ -116,36 +113,28 @@ class Measurements:
                 if station_code in file_info['stations']:
                     self._load_file_to_memory(file_info['path'], param_name)
 
-        # Poprawka: uzywamy .kod_stacji zamiast .station_code
         return [ts for ts in self._loaded_series if ts.kod_stacji == station_code]
 
     def detect_all_anomalies(self, validators: list['SeriesValidator'], preload: bool = False) -> dict:
-        """
-        Przechodzi przez serie czasowe i szuka anomalii przy pomocy przekazanych walidatorów.
-        """
-        # Zadanie 6a: Jeśli preload=True, wymuszamy wczytanie absolutnie wszystkich plików z katalogu
+
         if preload:
             for param_name, files_list in self._file_catalog.items():
                 for file_info in files_list:
                     self._load_file_to_memory(file_info['path'], param_name)
 
-        # Zadanie 7: Słownik do agregacji wyników
         raport_anomalii = {}
 
-        # Jeśli preload=False, pętla przejdzie tylko po tym, co już było wcześniej w self._loaded_series
         for ts in self._loaded_series:
-            # Tworzymy czytelny klucz dla słownika, żeby klient wiedział, gdzie jest błąd
+            # klucz dla słownika, gdzie jest błąd
             klucz_serii = f"{ts.kod_stacji} - {ts.nazwa_wskaznika}"
             bledy_dla_serii = []
 
-            # Uruchamiamy każdą "strategię" (walidator) z listy
             for validator in validators:
                 wynik = validator.analyze(ts)
-                # Wynik to lista stringów (lub pusta, jeśli jest OK). Jeśli coś tam jest, dodajemy.
+
                 if wynik:
                     bledy_dla_serii.extend(wynik)
 
-            # Zapisujemy do raportu TYLKO stacje, w których coś poszło nie tak
             if bledy_dla_serii:
                 raport_anomalii[klucz_serii] = bledy_dla_serii
 
