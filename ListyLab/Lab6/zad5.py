@@ -24,10 +24,19 @@ class Measurements:
             with open(file_path, 'r', encoding='utf-8') as f:
                 reader = csv.reader(f)
                 try:
-                    next(reader)
+                    row1 = next(reader)
+                    if not row1 or row1[0] != "Nr":
+                        logging.warning(f"Plik {file_path.name} to nie GIOŚ. Pomijam.")
+                        continue
+
                     row_stacje = next(reader)
+                    if not row_stacje or len(row_stacje) < 2 or row_stacje[0] != "Kod stacji":
+                        continue
                     station_codes = row_stacje[1:]
+
                     row_parametr = next(reader)
+                    if not row_parametr or len(row_parametr) < 2 or row_parametr[0] != "Wskaźnik":
+                        continue
                     param_name = row_parametr[1]
                 except StopIteration:
                     continue
@@ -91,8 +100,20 @@ class Measurements:
                 dates.append(date_val)
 
                 for i, station in enumerate(station_codes):
+                    #uciecie wiersza
+                    if i + 1 >= len(row):
+                        values_per_station[station].append(None)
+                        continue
+
                     val_str = row[i + 1]
-                    val = float(val_str) if val_str.strip() else None
+
+                    # litery zamist liczb
+                    try:
+                        val = float(val_str) if val_str.strip() else None
+                    except ValueError:
+                        logging.warning(f"Zła wartość '{val_str}' dla stacji {station}. Ustawiam None.")
+                        val = None
+
                     values_per_station[station].append(val)
 
             for station in station_codes:
