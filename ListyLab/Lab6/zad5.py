@@ -2,15 +2,17 @@ import csv
 from datetime import datetime
 from pathlib import Path
 from zad2 import TimeSeries
+import logging
 
+logging.basicConfig(level=logging.WARNING, format='%(levelname)s: %(message)s')
 
 class Measurements:
     def __init__(self, directory_path: str):
         self.directory_path = Path(directory_path)
-        self._file_catalog = {}
-        self._loaded_series: list['TimeSeries'] = []
+        self._file_dict = {}
+        self._loaded_timeSeries: list['TimeSeries'] = []
 
-        # Zabezpieczenie przed ponownym wczytywaniem tego samego pliku
+        #wczytywanie tego samego pliku
         self._loaded_files = set()
         self._scan_directory()
 
@@ -30,10 +32,10 @@ class Measurements:
                 except StopIteration:
                     continue
 
-            if param_name not in self._file_catalog:
-                self._file_catalog[param_name] = []
+            if param_name not in self._file_dict:
+                self._file_dict[param_name] = []
 
-            self._file_catalog[param_name].append({
+            self._file_dict[param_name].append({
                 'path': str(file_path),
                 'stations_num': len(station_codes),
                 'stations': station_codes
@@ -41,15 +43,15 @@ class Measurements:
 
     def __len__(self) -> int:
         total_series = 0
-        for parameter_files in self._file_catalog.values():
+        for parameter_files in self._file_dict.values():
             for file_info in parameter_files:
                 total_series += file_info["stations_num"]
         return total_series
 
     def __contains__(self, parameter_name: str) -> bool:
-        return parameter_name in self._file_catalog
+        return parameter_name in self._file_dict
 
-    def _load_file_to_memory(self, file_path: str, parameter_name: str):
+    def _load_file(self, file_path: str, parameter_name: str):
 
         if file_path in self._loaded_files:
             return
@@ -62,15 +64,15 @@ class Measurements:
             row_stacje = next(reader)
             station_codes = row_stacje[1:]
 
-            next(reader)  # Wiersz 3: Wskaźnik
+            next(reader)  # 3
 
-            row_czas = next(reader)  # Wiersz 4: Czas uśredniania
+            row_czas = next(reader)  # 4
             czas_usredniania = row_czas[1] if len(row_czas) > 1 else "1h"
 
-            row_jednostka = next(reader)  # Wiersz 5: Jednostka
+            row_jednostka = next(reader)  # 5
             jednostka = row_jednostka[1] if len(row_jednostka) > 1 else ""
 
-            next(reader)  # Wiersz 6: Kod stanowiska
+            next(reader)  # 6
 
             dates = []
             values_per_station = {}
@@ -80,7 +82,12 @@ class Measurements:
             for row in reader:
                 if not row: continue
 
-                date_val = datetime.strptime(row[0], "%m/%d/%y %H:%M")
+                try:
+                    date_val = datetime.strptime(row[0], "%m/%d/%y %H:%M")
+                except (ValueError, IndexError):
+                    logging.warning(f"Błędny format daty w pliku {Path(file_path).name}: '{row[0]}'. Pomijam wiersz.")
+                    continue
+
                 dates.append(date_val)
 
                 for i, station in enumerate(station_codes):
@@ -97,36 +104,36 @@ class Measurements:
                     values=values_per_station[station],
                     unit=jednostka
                 )
-                self._loaded_series.append(ts)
+                self._loaded_timeSeries.append(ts)
 
         # plik wczytany
         self._loaded_files.add(file_path)
 
     def get_by_parameter(self, parameter_name: str) -> list['TimeSeries']:
-        if parameter_name in self._file_catalog:
-            for file_info in self._file_catalog[parameter_name]:
-                self._load_file_to_memory(file_info['path'], parameter_name)
+        if parameter_name in self._file_dict:
+            for file_info in self._file_dict[parameter_name]:
+                self._load_file(file_info['path'], parameter_name)
 
-        return [ts for ts in self._loaded_series if ts.nazwa_wskaznika == parameter_name]
+        return [ts for ts in self._loaded_timeSeries if ts.nazwa_wskaznika == parameter_name]
 
     def get_by_station(self, station_code: str) -> list['TimeSeries']:
-        for param_name, files_list in self._file_catalog.items():
+        for param_name, files_list in self._file_dict.items():
             for file_info in files_list:
                 if station_code in file_info['stations']:
-                    self._load_file_to_memory(file_info['path'], param_name)
+                    self._load_file(file_info['path'], param_name)
 
-        return [ts for ts in self._loaded_series if ts.kod_stacji == station_code]
+        return [ts for ts in self._loaded_timeSeries if ts.kod_stacji == station_code]
 
     def detect_all_anomalies(self, validators: list['SeriesValidator'], preload: bool = False) -> dict:
 
         if preload:
-            for param_name, files_list in self._file_catalog.items():
+            for param_name, files_list in self._file_dict.items():
                 for file_info in files_list:
-                    self._load_file_to_memory(file_info['path'], param_name)
+                    self._load_file(file_info['path'], param_name)
 
         raport_anomalii = {}
 
-        for ts in self._loaded_series:
+        for ts in self._loaded_timeSeries:
             # klucz dla słownika, gdzie jest błąd
             klucz_serii = f"{ts.kod_stacji} - {ts.nazwa_wskaznika}"
             bledy_dla_serii = []
