@@ -19,11 +19,13 @@ class Measurements:
             logging.error(f"'{self.directory_path}' nie istniej")
             return
 
-        #R_ok read accces
-        #X_ok enter
-        if not os.access(self.directory_path, os.R_OK | os.X_OK):
-            logging.error(f"Permission Denied folder '{self.directory_path}'")
+        try:
+            next(self.directory_path.iterdir())
+        except PermissionError:
+            logging.error(f"Permission Denied w folderze '{self.directory_path}'")
             return
+        except StopIteration:
+            pass
 
         self._loaded_files = set()
         self._scan_directory()

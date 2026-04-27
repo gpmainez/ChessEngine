@@ -6,11 +6,13 @@ if __name__ == "__main__":
 
     pomiary = Measurements("testowe_pomiary")
     pomiary2 = Measurements("measurements")
+    pomiary3 = Measurements("priv")
 
     pomiary.get_by_parameter("NO2")
     pomiary.get_by_parameter("PM10")
     pomiary2.get_by_parameter("As(PM10)")
     pomiary.get_by_parameter("O3")
+    pomiary3.get_by_parameter("O3")
 
     valid = [
         ZeroSpikeDetector(k=3),
