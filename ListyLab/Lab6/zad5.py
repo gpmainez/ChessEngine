@@ -16,13 +16,13 @@ class Measurements:
         self._loaded_timeSeries: list[TimeSeries] = []
 
         if not self.directory_path.exists() or not self.directory_path.is_dir():
-            logging.error(f"'{self.directory_path}' nie istnieje!")
+            logging.error(f"'{self.directory_path}' nie istniej")
             return
 
         #R_ok read accces
         #X_ok enter
         if not os.access(self.directory_path, os.R_OK | os.X_OK):
-            logging.error(f"Brak uprawnień (Permission Denied) do folderu '{self.directory_path}'!")
+            logging.error(f"Permission Denied folder '{self.directory_path}'")
             return
 
         self._loaded_files = set()
@@ -38,7 +38,7 @@ class Measurements:
                 try:
                     row1 = next(reader)
                     if not row1 or row1[0] != "Nr":
-                        logging.warning(f"wrong {file_path.name} file structure")
+                        logging.warning(f"wrong {file_path.name} file structure (no number row)")
                         continue
 
                     row_stacje = next(reader)
