@@ -53,6 +53,7 @@ class Measurements:
                         continue
                     param_name = row_param[1]
                 except StopIteration:
+                    logging.warning(f"{file_path.name} jest za krótki ")
                     continue
 
             if param_name not in self._file_dict:
