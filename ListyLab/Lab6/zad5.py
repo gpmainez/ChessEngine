@@ -1,4 +1,5 @@
 import csv
+import os
 from datetime import datetime
 from pathlib import Path
 from zad2 import TimeSeries
@@ -13,6 +14,16 @@ class Measurements:
         self.directory_path = Path(directory_path)
         self._file_dict = {}
         self._loaded_timeSeries: list[TimeSeries] = []
+
+        if not self.directory_path.exists() or not self.directory_path.is_dir():
+            logging.error(f"'{self.directory_path}' nie istnieje!")
+            return
+
+        #R_ok read accces
+        #X_ok enter
+        if not os.access(self.directory_path, os.R_OK | os.X_OK):
+            logging.error(f"Brak uprawnień (Permission Denied) do folderu '{self.directory_path}'!")
+            return
 
         # wczytywanie tego samego pliku
         self._loaded_files = set()
