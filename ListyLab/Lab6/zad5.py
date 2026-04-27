@@ -25,7 +25,6 @@ class Measurements:
             logging.error(f"Brak uprawnień (Permission Denied) do folderu '{self.directory_path}'!")
             return
 
-        # wczytywanie tego samego pliku
         self._loaded_files = set()
         self._scan_directory()
 
@@ -91,8 +90,8 @@ class Measurements:
             row_czas = next(reader)  # 4
             time = row_czas[1] if len(row_czas) > 1 else "1h"
 
-            row_jednostka = next(reader)  # 5
-            jednostka = row_jednostka[1] if len(row_jednostka) > 1 else ""
+            row_typ_pomiaru = next(reader)  # 5
+            typ_pomiaru = row_typ_pomiaru[1] if len(row_typ_pomiaru) > 1 else ""
 
             next(reader)  # 6
 
@@ -136,7 +135,7 @@ class Measurements:
                     time=time,
                     dates=dates.copy(),
                     values=values_per_station[station],
-                    unit=jednostka
+                    unit=typ_pomiaru
                 )
                 self._loaded_timeSeries.append(ts)
 
