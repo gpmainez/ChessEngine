@@ -3,10 +3,10 @@ import numpy as np
 
 
 class TimeSeries:
-    def __init__(self, nazwa_wskaznika, kod_stacji, czas_usredniania, dates, values, unit):
+    def __init__(self, nazwa_wskaznika, kod_stacji, time, dates, values, unit):
         self.nazwa_wskaznika = nazwa_wskaznika
         self.kod_stacji = kod_stacji
-        self.czas_usredniania = czas_usredniania
+        self.czas_usredniania = time
         self.dates = dates
         self.values = values
         self.unit = unit
