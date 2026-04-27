@@ -27,13 +27,14 @@ class OutlierDetector(SeriesValidator):
         for date, val in zip(series.dates, series.values):
             if val is not None:
                 if abs(val - avg) > k_stdev:
-                    messages.append(f"Wartosc {val} z dnia {date} przekracza dopuszczalna {k}-krotnosc odchylenie")
+                    messages.append(f"Wartosc {val} z dnia {date} przekracza dopuszczalna {self.k}-krotnosc odchylenie")
         
         return messages
     
 class ZeroSpikeDetector(SeriesValidator):
     def __init__(self, k=3):
         self.k = k
+
     def __str__(self):
         return f"ZeroSpikeDetector(zeroes or Nones in a row={self.k})"
 
@@ -41,23 +42,25 @@ class ZeroSpikeDetector(SeriesValidator):
         messages = []
         consecutive_count = 0
         start_date = None
+        last_date = None
 
         for date, val in zip(series.dates, series.values):
             if val is None or val == 0:
                 if consecutive_count == 0:
                     start_date = date
                 consecutive_count += 1
-                
-                if consecutive_count == self.k:
-                    messages.append(f"Wykryto {self.k} zera/braki z rzedu od {start_date} do {date}.")
-                    consecutive_count = 0
-                    start_date = None
+                last_date = date
             else:
+                if consecutive_count >= self.k:
+                    messages.append(f"Wykryto {consecutive_count} zera/braki z rzedu od {start_date} do {last_date} (dopuszczalne {self.k-1})")
                 consecutive_count = 0
-                start_date = None
+
+        if consecutive_count >= self.k:
+                messages.append(f"Wykryto {consecutive_count} zera/braki z rzedu od {start_date} do {last_date} (dopuszczalne {self.k-1})")
                 
-        return messages
+        return messages 
     
+
 class ThresholdDetector(SeriesValidator):
     def __init__(self, threshold):
         self.threshold = threshold
