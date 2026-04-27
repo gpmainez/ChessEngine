@@ -20,13 +20,6 @@ if __name__ == "__main__":
         ThresholdDetector(threshold=200.0)
     ]
 
-    from unittest.mock import patch
-
-    # "Oszukujemy" system, że os.access zawsze zwraca False dla testu
-    with patch("os.access", return_value=False):
-        pomiary3 = Measurements("C:/Users/pc/Desktop/Nowy folder")
-        # Teraz na 100% zobaczysz log: ERROR: Brak uprawnień...
-
     for ts in pomiary._loaded_timeSeries:
         print(f"\n[Stacja: {ts.kod_stacji}] | Wskaźnik: {ts.nazwa_wskaznika}")
         print(f"   -> Daty: {ts.dates}")
