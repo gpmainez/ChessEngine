@@ -57,21 +57,24 @@ class TimeSeries:
         return (total - missing) / total * 100
 
 
-daty = [datetime.datetime(2026, 4, 20),
-        datetime.datetime(2026, 4, 20), datetime.datetime(2026, 4, 21)]
-wartosci = [10.5, None, 8.7]
 
-ts = TimeSeries("PM10", "6767", "1h", daty, wartosci, "g/m3")
 
-print(ts)
-print(repr(ts))
-print(ts[0])
-print(ts[0:2])
-print(ts[datetime.datetime(2026, 4, 20)])
-print(ts[datetime.date(2026, 4, 20)])
-print(f"missing count: {ts.missing_count}")
-print(f"completness: {ts.completeness}%")
-try:
-    print(ts[datetime.date(2026, 4, 30)])
-except KeyError:
-    print("blad!")
+if __name__ == '__main__':
+    daty = [datetime.datetime(2026, 4, 20),
+            datetime.datetime(2026, 4, 20), datetime.datetime(2026, 4, 21)]
+    wartosci = [10.5, None, 8.7]
+
+    ts = TimeSeries("PM10", "6767", "1h", daty, wartosci, "g/m3")
+
+    print(ts)
+    print(repr(ts))
+    print(ts[0])
+    print(ts[0:2])
+    print(ts[datetime.datetime(2026, 4, 20)])
+    print(ts[datetime.date(2026, 4, 20)])
+    print(f"missing count: {ts.missing_count}")
+    print(f"completness: {ts.completeness}%")
+    try:
+        print(ts[datetime.date(2026, 4, 30)])
+    except KeyError:
+        print("blad!")

@@ -23,11 +23,12 @@ class Station:
             return self.kod_stacji == other.kod_stacji
         return False
     
-stacja1 = Station("1","stacja pierwsza","2026-04-20","2026-05-20","typA","rodzajA","Dolnoślaskie","Wrocław","Rymarska 20G", "19.1234", "50.5678")
-stacja2 = Station("1","stacja druga","2026-04-20","2026-05-20","typA","rodzajA","Dolnoślaskie","Wrocław","Rymarska 20G", "19.1234", "50.5678")
-stacja3 = Station("3","stacja pierwsza","2026-04-20","2026-05-20","typA","rodzajA","Dolnoślaskie","Wrocław","Rymarska 20G", "19.1234", "50.5678")
+if __name__ == '__main__':
+    stacja1 = Station("1","stacja pierwsza","2026-04-20","2026-05-20","typA","rodzajA","Dolnoślaskie","Wrocław","Rymarska 20G", "19.1234", "50.5678")
+    stacja2 = Station("1","stacja druga","2026-04-20","2026-05-20","typA","rodzajA","Dolnoślaskie","Wrocław","Rymarska 20G", "19.1234", "50.5678")
+    stacja3 = Station("3","stacja pierwsza","2026-04-20","2026-05-20","typA","rodzajA","Dolnoślaskie","Wrocław","Rymarska 20G", "19.1234", "50.5678")
 
-print(f"stacja1 == stacja2: {stacja1 == stacja2}")
-print(f"stacja1 == stacja3: {stacja1 == stacja3}")
-print(f"str: {stacja1}")
-print(f"repr: {repr(stacja1)}")
+    print(f"stacja1 == stacja2: {stacja1 == stacja2}")
+    print(f"stacja1 == stacja3: {stacja1 == stacja3}")
+    print(f"str: {stacja1}")
+    print(f"repr: {repr(stacja1)}")
