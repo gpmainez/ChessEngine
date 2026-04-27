@@ -124,7 +124,7 @@ class Measurements:
                     try:
                         val = float(val_str) if val_str.strip() else None
                     except ValueError:
-                        logging.warning(f" zła wartość '{val_str}' def None.")
+                        logging.warning(f" zła wartość (litera zmaist liczby) '{val_str}' default None.")
                         val = None
 
                     values_per_station[station].append(val)
