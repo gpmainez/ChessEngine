@@ -23,7 +23,7 @@ def main():
 
     for detektor in klasy:
         wynik = detektor.analyze(seria)
-        print(f"{detektor} a wynik to {wynik}")
+        print(f"{detektor} a wynik to {wynik}\n")
 
 
 
