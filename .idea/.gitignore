@@ -3,3 +3,31 @@
 /workspace.xml
 # Editor-based HTTP Client requests
 /httpRequests/
+### Archiwa i binarne ###
+*.zip
+*.7z
+*.rar
+*.tar.gz
+*.exe
+
+### Python ###
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+### Dane wrażliwe ###
+.env
+*.log
+
+### Systemowe ###
+.DS_Store
+Thumbs.db
+
+### Twoje obecne wpisy (JetBrains/IDE) ###
+.idea/
+/shelf/
+/workspace.xml
+/httpRequests/
