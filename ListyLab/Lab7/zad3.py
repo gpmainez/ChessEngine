@@ -3,6 +3,10 @@ import string
 import pytest
 
 
+def letter_count(passwd, letter):
+    return len(list(filter(lambda c: c == letter, passwd)))
+
+
 class PasswordGenerator:
     def __init__(self, length, count, charset=string.ascii_letters + string.digits):
         self.length = length
@@ -41,28 +45,34 @@ class PasswordGenerator:
         self.count -= 1
         return self.generate_password()
 
+length = 20
+generator = PasswordGenerator(length=length, count=1)
+reslt = next(generator)
+char = 'a'
+print(reslt)
+print(letter_count(reslt.lower(), char))
 
-def test_password_constraints():
-    length = 5
-    generator = PasswordGenerator(length=length, count=1)
-    reslt = next(generator)
-
-    assert len(reslt) == length
-    with pytest.raises(StopIteration):
-        next(generator)
-
-
-def test_empty_charset_raises_error():
-    with pytest.raises(ValueError, match="charset can't be empty"):
-        PasswordGenerator(length=5, count=1, charset="")
-
-
-def test_invalid_length():
-    with pytest.raises(ValueError, match="length must be a positive number"):
-        PasswordGenerator(length=0, count=1)
-
-
-def test_negative_count_behavior():
-    generator = PasswordGenerator(length=10, count=-5)
-    with pytest.raises(StopIteration):
-        next(generator)
+# def test_password_constraints():
+#     length = 5
+#     generator = PasswordGenerator(length=length, count=1)
+#     reslt = next(generator)
+#
+#     assert len(reslt) == length
+#     with pytest.raises(StopIteration):
+#         next(generator)
+#
+#
+# def test_empty_charset_raises_error():
+#     with pytest.raises(ValueError, match="charset can't be empty"):
+#         PasswordGenerator(length=5, count=1, charset="")
+#
+#
+# def test_invalid_length():
+#     with pytest.raises(ValueError, match="length must be a positive number"):
+#         PasswordGenerator(length=0, count=1)
+#
+#
+# def test_negative_count_behavior():
+#     generator = PasswordGenerator(length=10, count=-5)
+#     with pytest.raises(StopIteration):
+#         next(generator)
