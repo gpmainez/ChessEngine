@@ -14,7 +14,11 @@ class Board:
         self.black_queen = self.white_queen << 56
         self.black_king = self.white_king << 56
 
-        self.castling_rights = "KQkq"
+        #0001 W king
+        #0010 W queen
+        #0100 B king
+        #1000 B queen
+        self.castling_rights = 0b1111
         self.en_passant_target = None
 
         self.white_to_move = True
@@ -35,14 +39,12 @@ class Board:
     def make_move(self, piece, start, target, capture_name=None):
         start_pos = 1 << start
         target_pos = 1 << target
-
         move = start_pos | target_pos
-
+        #make move
         current_board = getattr(self, piece)
-        changed_board = current_board ^ move
+        setattr(self, piece, current_board ^ move)
 
-        setattr(self, piece, changed_board)
-
+        #necesary to unmake_move (pin situation)
         self.moves_history.append({
             "piece": piece,
             "start": start,
@@ -53,18 +55,19 @@ class Board:
             "prev_en_passant": self.en_passant_target
         })
 
+
         if piece == 'white_king':
-            self.castling_rights = self.castling_rights.replace('K', '').replace('Q', '')
+            self.castling_rights &= ~0b0011
         elif piece == 'white_rooks':
-            if start == 0: self.castling_rights = self.castling_rights.replace('Q', '')
-            if start == 7: self.castling_rights = self.castling_rights.replace('K', '')
-
-        if piece == 'black_king':
-            self.castling_rights = self.castling_rights.replace('k', '').replace('q', '')
+            if start == 0: self.castling_rights &= ~0b0010
+            if start == 7: self.castling_rights &= ~0b0001
+        elif piece == 'black_king':
+            self.castling_rights &= ~0b1100
         elif piece == 'black_rooks':
-            if start == 0: self.castling_rights = self.castling_rights.replace('q', '')
-            if start == 7: self.castling_rights = self.castling_rights.replace('k', '')
+            if start == 56: self.castling_rights &= ~0b1000
+            if start == 63: self.castling_rights &= ~0b0100
 
+        #jakos to dziala chuuj wie kopiuj wklej z stack overf
         self.en_passant_target = None
         if piece == 'white_pawns' and (target - start == 16):
             self.en_passant_target = start + 8
@@ -73,28 +76,28 @@ class Board:
 
         if capture_name:
             current_board_capture = getattr(self, capture_name)
-
-            board_capture = current_board_capture ^ target_pos
-            setattr(self, capture_name, board_capture)
+            setattr(self, capture_name, current_board_capture ^ target_pos)
 
         self.white_to_move = not self.white_to_move
 
-    def move_validation(self):
+    #reset move(proper validation)
+    def undo_move(self):
         if not self.moves_history:
             return
 
-        last_move = self.moves_history[-1]
-        self.castling_rights = last_move["castling_rights"]
-        self.en_passant_target = last_move["en_passant_target"]
+        last_move = self.moves_history.pop()
+
+        self.castling_rights = last_move["prev_castling"]
+        self.en_passant_target = last_move["prev_en_passant"]
 
         current_board = getattr(self, last_move["piece"])
-        changed_board = current_board ^ last_move["move"]
-        setattr(self, last_move["piece"], changed_board)
+        setattr(self, last_move["piece"], current_board ^ last_move["move"])
 
         if last_move["capture_name"]:
-            get_piece = 1 < last_move["target"]
+
+            captured_piece_pos = 1 << last_move["target"]
             current_board_capture = getattr(self, last_move["capture_name"])
-            setattr(self, last_move["capture_name"], current_board_capture | get_piece)
+            setattr(self, last_move["capture_name"], current_board_capture | captured_piece_pos)
 
         self.white_to_move = not self.white_to_move
 
