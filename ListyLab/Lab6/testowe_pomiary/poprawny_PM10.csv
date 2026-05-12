@@ -1,0 +1,9 @@
+Nr,1,2
+Kod stacji,DsGlog,DsLegnica
+Wskaźnik,PM10,PM10
+Czas uśredniania,24g,24g
+Jednostka,ug/m3,ug/m3
+Kod stanowiska,Glog-1,Leg-1
+01/01/23 12:00,10.5,12.1
+01/02/23 12:00,15.2,18.0
+01/03/23 12:00,,8.5

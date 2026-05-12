@@ -8,7 +8,7 @@ from collections import Counter
 
 def main():
     if len(sys.argv) < 2:
-        print("Użycie: python zad4.py <sciezka_do_katalogu>")
+        print("Użycie: python zad4and5.py <sciezka_do_katalogu>")
         sys.exit(1)
 
     directory = sys.argv[1]
