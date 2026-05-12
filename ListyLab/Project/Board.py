@@ -1,6 +1,3 @@
-
-
-
 class Board:
     def __init__(self):
         self.white_pawns = 0xFF00
@@ -17,8 +14,10 @@ class Board:
         self.black_queen = self.white_queen << 56
         self.black_king = self.white_king << 56
 
+        self.castling_rights = "KQkq"
+        self.en_passant_target = None
 
-
+        self.white_to_move = True
         self.moves_history = []
 
     @property
@@ -49,10 +48,28 @@ class Board:
             "start": start,
             "target": target,
             "capture_name": capture_name,
-            "move": move
-        }
+            "move": move,
+            "prev_castling": self.castling_rights,
+            "prev_en_passant": self.en_passant_target
+        })
 
-        )
+        if piece == 'white_king':
+            self.castling_rights = self.castling_rights.replace('K', '').replace('Q', '')
+        elif piece == 'white_rooks':
+            if start == 0: self.castling_rights = self.castling_rights.replace('Q', '')
+            if start == 7: self.castling_rights = self.castling_rights.replace('K', '')
+
+        if piece == 'black_king':
+            self.castling_rights = self.castling_rights.replace('k', '').replace('q', '')
+        elif piece == 'black_rooks':
+            if start == 0: self.castling_rights = self.castling_rights.replace('q', '')
+            if start == 7: self.castling_rights = self.castling_rights.replace('k', '')
+
+        self.en_passant_target = None
+        if piece == 'white_pawns' and (target - start == 16):
+            self.en_passant_target = start + 8
+        elif piece == 'black_pawns' and (start - target == 16):
+            self.en_passant_target = start - 8
 
         if capture_name:
             current_board_capture = getattr(self, capture_name)
@@ -60,11 +77,15 @@ class Board:
             board_capture = current_board_capture ^ target_pos
             setattr(self, capture_name, board_capture)
 
+        self.white_to_move = not self.white_to_move
+
     def move_validation(self):
         if not self.moves_history:
             return
 
         last_move = self.moves_history[-1]
+        self.castling_rights = last_move["castling_rights"]
+        self.en_passant_target = last_move["en_passant_target"]
 
         current_board = getattr(self, last_move["piece"])
         changed_board = current_board ^ last_move["move"]
@@ -75,11 +96,13 @@ class Board:
             current_board_capture = getattr(self, last_move["capture_name"])
             setattr(self, last_move["capture_name"], current_board_capture | get_piece)
 
+        self.white_to_move = not self.white_to_move
+
     def load_fen(self, fen):
         self.white_pawns = self.white_rooks = self.white_knights = \
-        self.white_bishops = self.white_queen = self.white_king = 0
+            self.white_bishops = self.white_queen = self.white_king = 0
         self.black_pawns = self.black_rooks = self.black_knights = \
-        self.black_bishops = self.black_queen = self.black_king = 0
+            self.black_bishops = self.black_queen = self.black_king = 0
 
         parts = fen.split(" ")
         rows = parts[0].split("/")
@@ -107,6 +130,45 @@ class Board:
             val = getattr(self, attr)
             setattr(self, attr, val | (1 << square))
 
+    def generate_fen(self):
+        pieces = [
+            (self.white_pawns, 'P'), (self.white_rooks, 'R'), (self.white_knights, 'N'),
+            (self.white_bishops, 'B'), (self.white_queen, 'Q'), (self.white_king, 'K'),
+            (self.black_pawns, 'p'), (self.black_rooks, 'r'), (self.black_knights, 'n'),
+            (self.black_bishops, 'b'), (self.black_queen, 'q'), (self.black_king, 'k')
+        ]
+
+        current_board = self.all_pieces
+
+        fen_rows = []
+        for rank in range(7, -1, -1):
+            row_str = ""
+            empty_count = 0
+
+            for file in range(8):
+                square = rank * 8 + file
+                mask = 1 << square
+
+                if current_board & mask:
+                    if empty_count > 0:
+                        row_str += str(empty_count)
+                        empty_count = 0
+
+                    for bitboard, char in pieces:
+                        if bitboard & mask:
+                            row_str += char
+                            break
+                else:
+                    empty_count += 1
+            if empty_count > 0:
+                row_str += str(empty_count)
+
+            fen_rows.append(row_str)
+
+        ranks_part = "/".join(fen_rows)
+        to_move = "w" if self.white_to_move else "b"
+
+        return f"{ranks_part} {to_move} - - 0 1"
 
     def print_board(self, board):
         print("-" * 17)
@@ -125,5 +187,5 @@ class Board:
 if __name__ == "__main__":
     board = Board()
     board.print_board(board.all_pieces)
-    board.make_move('white_knights',1,18)
+    board.make_move('white_knights', 1, 18)
     board.print_board(board.all_pieces)
