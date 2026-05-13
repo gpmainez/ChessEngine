@@ -2,65 +2,33 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Szachy z FastAPI</title>
-    <!-- Style i skrypty potrzebne do wyświetlenia szachownicy -->
+    <title>Mój Silnik Szachowy</title>
+
+
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
-    <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; margin-top: 50px; }
-        #myBoard { width: 500px; }
-    </style>
+
+
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+<h1>Bitboard.</h1>
+<p>The engine seems to be waiting. <br> Perhaps it's time to make a move?</p>
 
-    <!-- Tu zostanie wyrenderowana szachownica -->
-    <div id="myBoard"></div>
+<main class="app-layout">
+    <div class="game-container">
+        <div id="myBoard"></div>
+    </div>
 
-    <script>
-        var board = null;
+    <div class="bar">
+        <button>Redo move</button>
+        <button>Ciapak Rzysztof</button>
+    </div>
+</main>
 
-        // Funkcja, która odpala się, gdy gracz puści bierkę
-        function onDrop (source, target, piece, newPos, oldPos, orientation) {
-            // Jeśli położono na tym samym polu, ignorujemy
-            if (source === target) return;
 
-            // Zatrzymujemy natychmiastowe odświeżenie wizualne frontendu,
-            // bo czekamy na potwierdzenie od backendu!
-
-            console.log("Wysyłam ruch do serwera:", source, target);
-
-            // Wykonujemy zapytanie do serwera (FastAPI)
-            fetch('/api/move', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ source: source, target: target })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === "success") {
-                    // Serwer zaakceptował ruch! Aktualizujemy szachownicę z FENa z serwera
-                    board.position(data.fen);
-                } else {
-                    // Serwer odrzucił ruch (nielegalny) - cofamy bierkę na wizualizacji
-                    return 'snapback';
-                }
-            })
-            .catch(error => {
-                console.error('Błąd:', error);
-                return 'snapback';
-            });
-        }
-
-        // Konfiguracja biblioteki chessboard.js
-        var config = {
-            draggable: true,      // Można przeciągać bierki
-            position: 'start',    // Pozycja początkowa (standardowy FEN)
-            onDrop: onDrop        // Nasza funkcja przypięta do upuszczania
-        }
-
-        // Inicjalizacja
-        board = Chessboard('myBoard', config);
-    </script>
+<script src="/static/app.js"></script>
 </body>
 </html>
+

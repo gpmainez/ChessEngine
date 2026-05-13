@@ -1,0 +1,109 @@
+body {
+    font-family: "Times New Roman", system-ui;
+    background-color: #344038;
+    color: white;
+    margin: 0;
+}
+
+.game-container {
+    text-align: center;
+}
+
+/*.top-nav {*/
+/*    background-color: #4a2814;*/
+/*    padding: 30px 30px;*/
+/*    display: flex;*/
+/*    justify-content: space-between;*/
+/*    align-items: center;*/
+/*    box-shadow: 0 4px 10px rgba(0,0,0,0.2);*/
+/*}*/
+
+h1 {
+    font-size: 5rem;
+    margin: 0;
+    font-weight: normal;
+    letter-spacing: 2px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+
+    text-shadow: 0.06rem 0 0.06rem #ea36af, -0.125rem 0 0.06rem #75fa69;
+    animation-name: textflicker;
+    animation-duration: 0.01s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+p {
+    font-size: 1.4rem;
+    font-weight: lighter;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    opacity: 1;
+    display: flex;
+    justify-content: center;
+
+    text-shadow: 0.06rem 0 0.06rem #ea36af, -0.125rem 0 0.06rem #75fa69;
+    animation-name: textflicker;
+    animation-duration: 0.01s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+.app-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    padding: 40px;
+}
+
+.bar {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+
+}
+
+#myBoard {
+    width: 500px;
+    margin: 0 auto;
+    box-shadow: 0 20px 20px rgba(0, 0, 0, 0.5);
+}
+
+button {
+    padding: 15px 25px;
+    background: transparent;
+    border: 2px solid #d8e8d5;
+    color: white;
+    font-size: 14pt;
+    font-family: inherit;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+
+button:hover {
+    background-color: #d8e8d5;
+    color: #1a2f23;
+    box-shadow: 0 0 15px rgba(216, 232, 213, 0.8);
+}
+
+.highlight1-32417, .highlight2-9c5d2 {
+
+    background-color: rgba(74, 246, 38, 0.4) !important;
+    box-shadow: inset 0 0 15px rgba(74, 246, 38, 0.8) !important;
+}
+
+white-1e1d7 {
+    background-color: #8b9987 !important;
+}
+.black-3c85d {
+    background-color: #4a5946 !important;
+}
+
+
+
+
+
