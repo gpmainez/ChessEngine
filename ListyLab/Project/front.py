@@ -10,7 +10,7 @@ COLOR_LIGHT = (240, 217, 181)
 COLOR_DARK = (85, 107, 47)
 
 COLOR_SELECTED = (233, 150, 122)
-COLOR_LAST_MOVE = (233, 150, 122)
+COLOR_LAST_MOVE = (194, 202, 134)
 
 selected_square = None
 last_move = None
@@ -26,7 +26,6 @@ parse_dict = {'wp': "white_pawns", 'wr': "white_rooks", 'wn': "white_knights", '
 
 
 def draw_board(screen):
-    """Rysuje czystą szachownicę."""
     for row in range(8):
         for col in range(8):
             color = COLOR_LIGHT if (row + col) % 2 == 0 else COLOR_DARK
@@ -73,9 +72,10 @@ def draw_legal_moves(screen, moves_list):
 
     overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
 
-    circle_color = (100, 100, 100, 150)
+    CIRCLE_COLOR = (120, 135, 95)
     circle_radius = SQ_SIZE // 6
 
+    #calculate index arry[64] -> [r][c]
     for index in moves_list:
         r = 7 - (index // 8)
         c = index % 8
@@ -83,7 +83,7 @@ def draw_legal_moves(screen, moves_list):
         center_x = c * SQ_SIZE + (SQ_SIZE // 2)
         center_y = r * SQ_SIZE + (SQ_SIZE // 2)
 
-        pygame.draw.circle(overlay, circle_color, (center_x, center_y), circle_radius)
+        pygame.draw.circle(overlay, CIRCLE_COLOR, (center_x, center_y), circle_radius)
 
     screen.blit(overlay, (0, 0))
 
@@ -107,7 +107,7 @@ def main():
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     clicked_idx = get_index_from_mouse(pygame.mouse.get_pos(), SQ_SIZE)
-
+                    #if selecetd square is piece
                     if selected_square is None:
 
                         if user_api.board.get_piece(clicked_idx) is not None:
@@ -120,6 +120,7 @@ def main():
                             start, target = user_api.user_move_parser(selected_square, clicked_idx)
                             print("move from {} to {}".format(start, target))
 
+                            #move validation method
                             legal = user_api.try_to_move(selected_square, clicked_idx)
 
                             if legal:
