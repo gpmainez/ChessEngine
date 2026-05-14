@@ -45,9 +45,21 @@ def compute_slider_moves(arrays, directions_dict, square, all_pieces, same_color
             else:
                 lowest_bit_idx = obstacle.bit_length() - 1
             moves = moves | (arrays[dir_name][square] ^ arrays[dir_name][lowest_bit_idx])
+        else:
+            moves = moves | arrays[dir_name][square]
 
     return moves & ~same_color_pieces
 
+def calcualte_bit(mask):
+    squares = []
+
+    while mask > 0:
+        file = mask & -mask
+        idx = file.bit_length() - 1
+        squares.append(idx)
+        mask = mask & (mask - 1)
+
+    return squares
 
 class MoveGenerator:
     def __init__(self):
@@ -151,6 +163,39 @@ class MoveGenerator:
 
         return moves, promotions
 
+    def move_piece_validation(self, piece_code, square, board):
+
+        all_pieces = board.all_pieces
+        white_pieces = board.white_pieces
+        black_pieces = board.black_pieces
+
+        is_white = piece_code.startswith('w')
+        same_color = white_pieces if is_white else black_pieces
+
+        if piece_code == 'wn' or piece_code == 'bn':
+            return self.move_knight(square, same_color)
+
+        elif piece_code == 'wk' or piece_code == 'bk':
+            return self.move_king(square, same_color)
+
+        elif piece_code == 'wb' or piece_code == 'bb':
+            return self.move_bishop(square, same_color, all_pieces)
+
+        elif piece_code == 'wr' or piece_code == 'br':
+            return self.move_rook(square, same_color, all_pieces)
+
+        elif piece_code == 'wq' or piece_code == 'bq':
+            return self.move_queen(square, same_color, all_pieces)
+
+        elif piece_code == 'wp':
+            moves, promotions = self.move_white_pawn(square, all_pieces, black_pieces, board.en_passant_target)
+            return moves | promotions
+
+        elif piece_code == 'bp':
+            moves, promotions = self.move_black_pawn(square, all_pieces, white_pieces, board.en_passant_target)
+            return moves | promotions
+
+        return 0
 
 def print_bitboard(mask, title="Bitboard"):
     print(f"\n--- {title} ---")

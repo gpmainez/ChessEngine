@@ -1,3 +1,6 @@
+from Demos.mmapfile_demo import offset
+
+
 class Board:
     def __init__(self):
         self.white_pawns = 0xFF00
@@ -158,15 +161,15 @@ class Board:
 
             for file in range(8):
                 square = rank * 8 + file
-                mask = 1 << square
+                target = 1 << square
 
-                if current_board & mask:
+                if current_board & target:
                     if empty_count > 0:
                         row_str += str(empty_count)
                         empty_count = 0
 
                     for bitboard, char in pieces:
-                        if bitboard & mask:
+                        if bitboard & target:
                             row_str += char
                             break
                 else:
@@ -181,6 +184,39 @@ class Board:
 
         return f"{ranks_part} {to_move} - - 0 1"
 
+    def get_piece(self, square_idx):
+        target = 1 << square_idx
+        piece = self.all_pieces & target
+
+        if piece:
+            if self.white_pawns & target:
+                return 'wp'
+            elif self.white_king & target:
+                return 'wk'
+            elif self.white_bishops & target:
+                return 'wb'
+            elif self.white_queen & target:
+                return 'wq'
+            elif self.white_knights & target:
+                return 'wn'
+            elif self.white_rooks & target:
+                return 'wr'
+            elif self.black_pawns & target:
+                return 'bp'
+            elif self.black_king & target:
+                return 'bk'
+            elif self.black_bishops & target:
+                return 'bb'
+            elif self.black_queen & target:
+                return 'bq'
+            elif self.black_knights & target:
+                return 'bn'
+            elif self.black_rooks & target:
+                return 'br'
+            return None
+
+        else:
+            return None
 
     def print_board(self, board):
         print("-" * 17)

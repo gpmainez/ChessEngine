@@ -4,6 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
+from frontUtlis import UserApi
+
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -33,6 +35,7 @@ def parse_move_to_index(square_str):
 class MoveRequest(BaseModel):
     source: str
     target: str
+    user_api = UserApi()
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -42,15 +45,15 @@ async def read_root(request: Request):
 
 @app.post("/api/move")
 async def make_move(move: MoveRequest):
-    # 2. ODBIERAMY RUCH Z FRONTU (np. "e2", "e4")
     print(f"--- NOWY RUCH Z PRZEGLĄDARKI ---")
     print(f"Otrzymano tekstowo: z {move.source} na {move.target}")
 
-    # 3. TŁUMACZYMY NA JĘZYK TWOJEGO SILNIKA (BITBOARDY)
-    start_idx = parse_move_to_index(move.source)
-    target_idx = parse_move_to_index(move.target)
 
-    print(f"Przetłumaczono na indeksy silnika: z {start_idx} na {target_idx}")
+    start_pos, target_pos = move.user_api.web_move_parser(move.source, move.target)
+
+
+
+    print(f"Przetłumaczono na indeksy silnika: z {start_pos} na {target_pos}")
     print(f"--------------------------------")
 
     # Na razie wysyłamy do frontu błąd, zeby bierka "odbijała się"
