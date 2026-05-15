@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
-from frontUtlis import UserApi
+from engine.Manager import GameManager
 
 app = FastAPI()
 
@@ -35,7 +35,7 @@ def parse_move_to_index(square_str):
 class MoveRequest(BaseModel):
     source: str
     target: str
-    user_api = UserApi()
+    user_api = GameManager()
 
 
 @app.get("/", response_class=HTMLResponse)

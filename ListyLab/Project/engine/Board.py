@@ -17,10 +17,10 @@ class Board:
         self.black_queen = self.white_queen << 56
         self.black_king = self.white_king << 56
 
-        # 0001 W king
-        # 0010 W queen
-        # 0100 B king
-        # 1000 B queen
+        # 0001 W short
+        # 0010 W long
+        # 0100 B short
+        # 1000 B long
         self.castling_rights = 0b1111
         self.en_passant_target = None
 
@@ -49,14 +49,31 @@ class Board:
     def all_pieces(self):
         return self.white_pieces | self.black_pieces
 
-    def make_move(self, piece, start, target, capture_name=None):
+    def make_move(self, piece, start, target, capture_name=None, en_passant=False, promotion_piece=None):
         start_pos = 1 << start
         target_pos = 1 << target
         move = start_pos | target_pos
-        # make move
-        current_board = getattr(self, piece)
-        setattr(self, piece, current_board ^ move)
 
+        if promotion_piece:
+            current_pawns = getattr(self, piece)
+            setattr(self, piece, current_pawns ^ (1 << start))
+
+            current_promo = getattr(self, promotion_piece)
+            setattr(self, promotion_piece, current_promo | (1 << target))
+        else:
+            # make move
+            current_board = getattr(self, piece)
+            setattr(self, piece, current_board ^ move)
+
+        if piece in ['white_king', 'black_king'] and abs(start - target) == 2:
+            if target == 6:
+                self.white_rooks ^= (1 << 7) | (1 << 5)
+            elif target == 2:
+                self.white_rooks ^= (1 << 0) | (1 << 3)
+            elif target == 62:
+                self.black_rooks ^= (1 << 63) | (1 << 61)
+            elif target == 58:
+                self.black_rooks ^= (1 << 56) | (1 << 59)
         # necesary to unmake_move (pin situation)
         self.moves_history.append({
             "piece": piece,
@@ -65,7 +82,8 @@ class Board:
             "capture_name": capture_name,
             "move": move,
             "prev_castling": self.castling_rights,
-            "prev_en_passant": self.en_passant_target
+            "prev_en_passant": self.en_passant_target,
+            "is_en_passant": en_passant,
         })
 
         if piece == 'white_king':
@@ -79,7 +97,6 @@ class Board:
             if start == 56: self.castling_rights &= ~0b1000
             if start == 63: self.castling_rights &= ~0b0100
 
-        # jakos to dziala chuuj wie kopiuj wklej z stack overf
         self.en_passant_target = None
         if piece == 'white_pawns' and (target - start == 16):
             self.en_passant_target = start + 8
@@ -87,12 +104,22 @@ class Board:
             self.en_passant_target = start - 8
 
         if capture_name:
-            current_board_capture = getattr(self, capture_name)
-            setattr(self, capture_name, current_board_capture ^ target_pos)
+            if en_passant:
+                if piece == "white_pawns":
+                    capture = target - 8
+                else:
+                    capture = target + 8
+
+                current_board_capture = getattr(self, capture_name)
+                setattr(self, capture_name, current_board_capture ^ (1 << capture))
+            else:
+                current_board_capture = getattr(self, capture_name)
+                setattr(self, capture_name, current_board_capture ^ target_pos)
 
         self.white_to_move = not self.white_to_move
 
     # reset move(proper validation)
+
     def undo_move(self):
         if not self.moves_history:
             return
@@ -106,7 +133,15 @@ class Board:
         setattr(self, last_move["piece"], current_board ^ last_move["move"])
 
         if last_move["capture_name"]:
-            captured_piece_pos = 1 << last_move["target"]
+            if last_move.get("is_en_passant"):
+                if last_move["piece"] == 'white_pawns':
+                    captured_square = last_move["target"] - 8
+                else:
+                    captured_square = last_move["target"] + 8
+                captured_piece_pos = 1 << captured_square
+            else:
+                captured_piece_pos = 1 << last_move["target"]
+
             current_board_capture = getattr(self, last_move["capture_name"])
             setattr(self, last_move["capture_name"], current_board_capture | captured_piece_pos)
 

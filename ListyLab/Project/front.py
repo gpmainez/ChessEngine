@@ -1,6 +1,8 @@
 import pygame
 import sys
-from frontUtlis import UserApi, get_index_from_mouse
+from engine.Manager import GameManager, get_index_from_mouse
+
+
 
 pygame.init()
 
@@ -17,7 +19,7 @@ last_move = None
 legal_moves_to_draw = []
 
 Images = {}
-user_api = UserApi()
+manager = GameManager()
 
 parse_dict = {'wp': "white_pawns", 'wr': "white_rooks", 'wn': "white_knights", 'wb': "white_bishops",
               'wk': "white_king", 'wq': "white_queen", 'bp': "black_pawns", 'br': "black_rooks", 'bn': "black_knights",
@@ -75,7 +77,7 @@ def draw_legal_moves(screen, moves_list):
     CIRCLE_COLOR = (120, 135, 95)
     circle_radius = SQ_SIZE // 6
 
-    #calculate index arry[64] -> [r][c]
+    # calculate index arry[64] -> [r][c]
     for index in moves_list:
         r = 7 - (index // 8)
         c = index % 8
@@ -107,21 +109,21 @@ def main():
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     clicked_idx = get_index_from_mouse(pygame.mouse.get_pos(), SQ_SIZE)
-                    #if selecetd square is piece
+                    # if selecetd square is piece
                     if selected_square is None:
 
-                        if user_api.board.get_piece(clicked_idx) is not None:
+                        if manager.board.get_piece(clicked_idx) is not None:
                             selected_square = clicked_idx
-                            print(user_api.board.get_piece(clicked_idx))
-                            legal_moves_to_draw = user_api.valid_move_ui(selected_square)
+                            print(manager.board.get_piece(clicked_idx))
+                            legal_moves_to_draw = manager.valid_move_ui(selected_square)
                     else:
                         # second click
                         if selected_square != clicked_idx:
-                            start, target = user_api.user_move_parser(selected_square, clicked_idx)
+                            start, target = manager.user_move_parser(selected_square, clicked_idx)
                             print("move from {} to {}".format(start, target))
 
-                            #move validation method
-                            legal = user_api.try_to_move(selected_square, clicked_idx)
+                            # move validation method
+                            legal = manager.try_to_move(selected_square, clicked_idx)
 
                             if legal:
                                 last_move = (selected_square, clicked_idx)
@@ -147,7 +149,7 @@ def main():
         if legal_moves_to_draw:
             draw_legal_moves(screen, legal_moves_to_draw)
 
-        draw_pieces(screen, user_api.board)
+        draw_pieces(screen, manager.board)
 
         pygame.display.flip()
         clock.tick(60)

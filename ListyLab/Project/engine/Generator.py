@@ -14,12 +14,12 @@ def precompute_moves(move_vector):
     return moves
 
 
-def precompute_all_rays(directions_dict):
-    rays = {dir_name: [0] * 64 for dir_name in directions_dict}
+def precompute_all_rays(move_vectors_dict):
+    rays = {dir_name: [0] * 64 for dir_name in move_vectors_dict}
     for square in range(64):
         row = square // 8
         file = square % 8
-        for dir_name, (x_jump, y_jump) in directions_dict.items():
+        for dir_name, (x_jump, y_jump) in move_vectors_dict.items():
             mask = 0
             for step in range(1, 8):
                 r = row + (x_jump * step)
@@ -50,6 +50,7 @@ def compute_slider_moves(arrays, directions_dict, square, all_pieces, same_color
 
     return moves & ~same_color_pieces
 
+
 def calcualte_bit(mask):
     squares = []
 
@@ -60,6 +61,7 @@ def calcualte_bit(mask):
         mask = mask & (mask - 1)
 
     return squares
+
 
 class MoveGenerator:
     def __init__(self):
@@ -109,7 +111,7 @@ class MoveGenerator:
                 double_move = square + 16
                 if not (all_pieces & (1 << double_move)):
                     moves = moves | (1 << double_move)
-                    moves = moves | (1 << move)
+
             if row == 6:
                 promotions = promotions | (1 << move)
             else:
@@ -196,6 +198,7 @@ class MoveGenerator:
             return moves | promotions
 
         return 0
+
 
 def print_bitboard(mask, title="Bitboard"):
     print(f"\n--- {title} ---")
