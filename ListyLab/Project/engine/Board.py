@@ -162,7 +162,6 @@ class Board:
             current_rooks = getattr(self, rook_piece)
             setattr(self, rook_piece, current_rooks ^ rook_move_mask)
 
-        # necesary to unmake_move (pin situation)
         self.moves_history.append({
             "piece": piece,
             "start": start,
@@ -173,18 +172,8 @@ class Board:
             "prev_en_passant": self.en_passant_target,
             "is_en_passant": en_passant,
             "rook_move": rook_move,
+            "promotion_piece": promotion_piece,
         })
-
-        # if piece == 'white_king':
-        #     self.castling_rights &= ~0b0011
-        # elif piece == 'white_rooks':
-        #     if start == 0: self.castling_rights &= ~0b0010
-        #     if start == 7: self.castling_rights &= ~0b0001
-        # elif piece == 'black_king':
-        #     self.castling_rights &= ~0b1100
-        # elif piece == 'black_rooks':
-        #     if start == 56: self.castling_rights &= ~0b1000
-        #     if start == 63: self.castling_rights &= ~0b0100
 
         if removed_castle_rights:
             self.castling_rights &= ~removed_castle_rights
@@ -221,8 +210,19 @@ class Board:
         self.castling_rights = last_move["prev_castling"]
         self.en_passant_target = last_move["prev_en_passant"]
 
-        current_board = getattr(self, last_move["piece"])
-        setattr(self, last_move["piece"], current_board ^ last_move["move"])
+        if last_move.get("promotion_piece"):
+            # Clear promoted piece from target
+            promo_name = last_move["promotion_piece"]
+            current_promo = getattr(self, promo_name)
+            setattr(self, promo_name, current_promo ^ (1 << last_move["target"]))
+
+            # Place pawn back on start
+            pawn_name = last_move["piece"]
+            current_pawns = getattr(self, pawn_name)
+            setattr(self, pawn_name, current_pawns ^ (1 << last_move["start"]))
+        else:
+            current_board = getattr(self, last_move["piece"])
+            setattr(self, last_move["piece"], current_board ^ last_move["move"])
 
         if last_move["rook_move"]:
             rook_start, rook_end = last_move["rook_move"]

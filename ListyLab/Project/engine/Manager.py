@@ -180,23 +180,11 @@ class BaseGameManager(ABC):
         else:
             return "STALEMATE"
 
-    def try_to_move(self, start_pos, target_pos):
-
-        moves = self.legal_moves(start_pos)
-
-        if moves == 0:
-            return False
-
-        if not (moves & 1 << target_pos):
-            return False
-
+    def make_move_engine(self, start_pos, target_pos):
         piece = self.parse_dict[self.board.get_piece(start_pos)]
         target_piece = self.board.get_piece(target_pos)
 
         piecie_color = piece.startswith('w')
-
-        if piecie_color != self.board.white_to_move:
-            return False
 
         en_passant = False
         promotion = None
@@ -244,6 +232,24 @@ class BaseGameManager(ABC):
             capture = self.parse_dict[target_piece] if target_piece else None
 
         self.board.make_move(piece, start_pos, target_pos, capture, en_passant, promotion, rook_move, castle_mask)
+
+    def try_to_move(self, start_pos, target_pos):
+
+        moves = self.legal_moves(start_pos)
+
+        if moves == 0:
+            return False
+
+        if not (moves & 1 << target_pos):
+            return False
+
+        piece = self.parse_dict[self.board.get_piece(start_pos)]
+        piecie_color = piece.startswith('w')
+
+        if piecie_color != self.board.white_to_move:
+            return False
+
+        self.make_move_engine(start_pos, target_pos)
 
         state = self.check_game_state()
         if state == "CHECKMATE":

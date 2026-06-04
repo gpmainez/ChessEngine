@@ -92,23 +92,8 @@ def minimax_ab(manager, depth: int, alpha: float, beta: float, maximizing: bool)
     if maximizing:
         max_eval = -999999
         for start, target in moves:
-            #wykonaj ruch
-            piece = manager.parse_dict[manager.board.get_piece(start)]
-            target_piece = manager.board.get_piece(target)
-            capture = manager.parse_dict[target_piece] if target_piece else None
-            
-            #ustalenia en passant i promocji
-            en_passant = False
-            promotion = None
-            if piece in ["white_pawns", "black_pawns"] and target == manager.board.en_passant_target:
-                en_passant = True
-                capture = 'black_pawns' if manager.board.white_to_move else 'white_pawns'
-            elif piece == "white_pawns" and (target // 8 == 7):
-                promotion = "white_queen"
-            elif piece == "black_pawns" and (target // 8 == 0):
-                promotion = "black_queen"
-                
-            manager.board.make_move(piece, start, target, capture, en_passant, promotion)
+            #wykonaj ruch za pomoca zunifikowanego silnika w managerze (w tym roszady i promocje)
+            manager.make_move_engine(start, target)
             
             evaluation = minimax_ab(manager, depth - 1, alpha, beta, False)
             manager.board.undo_move()
@@ -121,21 +106,7 @@ def minimax_ab(manager, depth: int, alpha: float, beta: float, maximizing: bool)
     else:
         min_eval = 999999
         for start, target in moves:
-            piece = manager.parse_dict[manager.board.get_piece(start)]
-            target_piece = manager.board.get_piece(target)
-            capture = manager.parse_dict[target_piece] if target_piece else None
-            
-            en_passant = False
-            promotion = None
-            if piece in ["white_pawns", "black_pawns"] and target == manager.board.en_passant_target:
-                en_passant = True
-                capture = 'black_pawns' if manager.board.white_to_move else 'white_pawns'
-            elif piece == "white_pawns" and (target // 8 == 7):
-                promotion = "white_queen"
-            elif piece == "black_pawns" and (target // 8 == 0):
-                promotion = "black_queen"
-                
-            manager.board.make_move(piece, start, target, capture, en_passant, promotion)
+            manager.make_move_engine(start, target)
             
             evaluation = minimax_ab(manager, depth - 1, alpha, beta, True)
             manager.board.undo_move()
@@ -161,21 +132,7 @@ def find_best_move(manager, depth: int) -> tuple[int, int] | None:
     if is_white:
         best_val = -999999
         for start, target in moves:
-            piece = manager.parse_dict[manager.board.get_piece(start)]
-            target_piece = manager.board.get_piece(target)
-            capture = manager.parse_dict[target_piece] if target_piece else None
-            
-            en_passant = False
-            promotion = None
-            if piece in ["white_pawns", "black_pawns"] and target == manager.board.en_passant_target:
-                en_passant = True
-                capture = 'black_pawns' if manager.board.white_to_move else 'white_pawns'
-            elif piece == "white_pawns" and (target // 8 == 7):
-                promotion = "white_queen"
-            elif piece == "black_pawns" and (target // 8 == 0):
-                promotion = "black_queen"
-                
-            manager.board.make_move(piece, start, target, capture, en_passant, promotion)
+            manager.make_move_engine(start, target)
             val = minimax_ab(manager, depth - 1, -999999, 999999, False)
             manager.board.undo_move()
             
@@ -185,21 +142,7 @@ def find_best_move(manager, depth: int) -> tuple[int, int] | None:
     else:
         best_val = 999999
         for start, target in moves:
-            piece = manager.parse_dict[manager.board.get_piece(start)]
-            target_piece = manager.board.get_piece(target)
-            capture = manager.parse_dict[target_piece] if target_piece else None
-            
-            en_passant = False
-            promotion = None
-            if piece in ["white_pawns", "black_pawns"] and target == manager.board.en_passant_target:
-                en_passant = True
-                capture = 'black_pawns' if manager.board.white_to_move else 'white_pawns'
-            elif piece == "white_pawns" and (target // 8 == 7):
-                promotion = "white_queen"
-            elif piece == "black_pawns" and (target // 8 == 0):
-                promotion = "black_queen"
-                
-            manager.board.make_move(piece, start, target, capture, en_passant, promotion)
+            manager.make_move_engine(start, target)
             val = minimax_ab(manager, depth - 1, -999999, 999999, True)
             manager.board.undo_move()
             

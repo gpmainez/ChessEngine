@@ -2,8 +2,9 @@ import pygame
 import sys
 import random
 from engine.Manager import get_index_from_mouse, GameManagerFactory
-from engine.Board import validate_fen
+from engine.Board import validate_fen, FILE_DICT, REVERT_FILE_DICT
 from engine.Strategy import RandomMoveStrategy, MinimaxAlphaBetaStrategy
+from engine.Bridge import GameInterfaceBridge
 
 pygame.init()
 
@@ -25,18 +26,20 @@ computer_last_move = None
 legal_moves_to_draw = []
 
 Images = {}
-#manager tworzony przez fabryke po wyborze trybu
+#manager i bridge tworzone po wyborze trybu
 manager = GameManagerFactory.create("standard")
+bridge = GameInterfaceBridge(manager)
+current_difficulty = 3 # domyslnie Medium (depth 3)
 
 vs_ai = True
 ai_color = False #czarne to komputer
 
 #poziomy trudnosci ai
 DIFFICULTY_LEVELS = [
-    {"name": "Extra Easy", "desc": "losowe ruchy", "strategy": RandomMoveStrategy()},
-    {"name": "Easy", "desc": "minimax depth 1", "strategy": MinimaxAlphaBetaStrategy(depth=1)},
-    {"name": "Medium", "desc": "minimax depth 3", "strategy": MinimaxAlphaBetaStrategy(depth=3)},
-    {"name": "Hard", "desc": "minimax depth 5", "strategy": MinimaxAlphaBetaStrategy(depth=5)},
+    {"name": "Extra Easy", "desc": "losowe ruchy"},
+    {"name": "Easy", "desc": "minimax depth 1"},
+    {"name": "Medium", "desc": "minimax depth 3"},
+    {"name": "Hard", "desc": "minimax depth 5"},
 ]
 
 #tryby gry dostepne w menu
@@ -85,14 +88,14 @@ def loadImages():
             pygame.image.load("images/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
 
 
-def draw_pieces(screen, board, skip_idx=None):
+def draw_pieces(screen, skip_idx=None):
     #  draw all figuras on board
     #   optionally skip drawing one figura
     for idx in range(64):
         if idx == skip_idx:
             continue
 
-        char = board.get_piece(idx)
+        char = bridge.get_piece(idx)
 
         if char is None:
             continue
@@ -101,6 +104,7 @@ def draw_pieces(screen, board, skip_idx=None):
         c = idx % 8
 
         screen.blit(Images[char], pygame.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
+
 
 
 def draw_legal_moves(screen, moves_list):
@@ -125,7 +129,7 @@ def draw_legal_moves(screen, moves_list):
     screen.blit(overlay, (0, 0))
 
 
-def animate_move(screen, board, start, target, figura_char, clock, p_move, c_move):
+def animate_move(screen, start, target, figura_char, clock, p_move, c_move):
     #  lerp animation function
     #   smoothly slides figura from start to target
     #  locks input during animation and clears queue
@@ -158,7 +162,7 @@ def animate_move(screen, board, start, target, figura_char, clock, p_move, c_mov
             highlight_square(screen, c_move[1], COLOR_LAST_MOVE)
 
         #  draw all figuras except the animating one which is at target
-        draw_pieces(screen, board, skip_idx=target)
+        draw_pieces(screen, skip_idx=target)
 
         #   draw the animating figura
         screen.blit(Images[figura_char], pygame.Rect(curr_x, curr_y, SQ_SIZE, SQ_SIZE))
@@ -183,21 +187,21 @@ def do_ai_move(screen, clock):
     if computer_last_move is not None:
         highlight_square(screen, computer_last_move[0], COLOR_LAST_MOVE)
         highlight_square(screen, computer_last_move[1], COLOR_LAST_MOVE)
-    draw_pieces(screen, manager.board)
+    draw_pieces(screen)
     pygame.display.flip()
 
     pygame.display.set_caption("AI mysli...")
-    ai_moved = manager.make_ai_move()
+    ai_move = bridge.make_ai_move(current_difficulty)
     pygame.display.set_caption("Python Bitboard Engine GUI")
 
-    if ai_moved and manager.board.moves_history:
-        last_hist = manager.board.moves_history[-1]
-        computer_last_move = (last_hist["start"], last_hist["target"])
+    if ai_move:
+        start_idx = FILE_DICT[ai_move[0]]
+        target_idx = FILE_DICT[ai_move[1]]
+        computer_last_move = (start_idx, target_idx)
 
         # animate computer move
-        figura_char = manager.board.get_piece(last_hist["target"])
-        animate_move(screen, manager.board, last_hist["start"],
-                     last_hist["target"], figura_char, clock,
+        figura_char = bridge.get_piece(target_idx)
+        animate_move(screen, start_idx, target_idx, figura_char, clock,
                      player_last_move, computer_last_move)
 
 
@@ -253,6 +257,7 @@ def draw_difficulty_menu(screen):
 
 def difficulty_menu(screen, clock):
     #ekran wyboru trudnosci - blokuje do momentu wyboru
+    global current_difficulty
     while True:
         btn_rects = draw_difficulty_menu(screen)
 
@@ -264,8 +269,9 @@ def difficulty_menu(screen, clock):
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 for i, rect in enumerate(btn_rects):
                     if rect.collidepoint(event.pos):
-                        #ustaw strategie ai
-                        manager.ai_strategy = DIFFICULTY_LEVELS[i]["strategy"]
+                        # Map index to difficulty: 0 -> 0, 1 -> 1, 2 -> 3, 3 -> 5
+                        diff_mapping = {0: 0, 1: 1, 2: 3, 3: 5}
+                        current_difficulty = diff_mapping[i]
                         print(f"ai level set to {DIFFICULTY_LEVELS[i]['name']}")
                         return
 
@@ -314,7 +320,7 @@ def draw_mode_menu(screen):
 
 def mode_menu(screen, clock):
     #ekran wyboru trybu - zwraca wybrany tryb jako string
-    global manager
+    global manager, bridge
     while True:
         btn_rects = draw_mode_menu(screen)
         for event in pygame.event.get():
@@ -327,6 +333,7 @@ def mode_menu(screen, clock):
                         chosen = GAME_MODES[i]["mode"]
                         #fabryka tworzy nowy manager dla wybranego trybu
                         manager = GameManagerFactory.create(chosen)
+                        bridge = GameInterfaceBridge(manager)
                         print(f"game mode: {GAME_MODES[i]['name']}")
                         return
         clock.tick(30)
@@ -407,7 +414,7 @@ def draw_game_over(screen, state):
 
     if state == "CHECKMATE":
         #kto wygral - przeciwna strona do tej ktora nie ma ruchow
-        winner = "Czarny" if manager.board.white_to_move else "Bialy"
+        winner = "Czarny" if bridge.white_to_move else "Bialy"
         msg = f"SZACH MAT! Wygrywa {winner}"
         color = (220, 80, 60)
     else:
@@ -426,7 +433,8 @@ def draw_game_over(screen, state):
 
 def check_and_get_state():
     #sprawdza stan gry i zwraca go
-    return manager.check_game_state()
+    res = bridge.get_game_result()
+    return res if res is not None else "CONTINUE"
 
 
 def main():
@@ -444,7 +452,7 @@ def main():
     color_menu(screen, clock)
 
     #   wykonaj ruch ai jesli gra jako pierwsze (biale)
-    if vs_ai and manager.board.white_to_move == ai_color:
+    if vs_ai and bridge.white_to_move == ai_color:
         do_ai_move(screen, clock)
 
     game_over_state = None  #None CHECKMATE lub STALEMATE
@@ -467,7 +475,7 @@ def main():
                     mode_menu(screen, clock)
                     difficulty_menu(screen, clock)
                     color_menu(screen, clock)
-                    if vs_ai and manager.board.white_to_move == ai_color:
+                    if vs_ai and bridge.white_to_move == ai_color:
                         do_ai_move(screen, clock)
                     continue
 
@@ -477,42 +485,33 @@ def main():
 
                 if event.key == pygame.K_s:
                     #   save board state
-                    try:
-                        fen = manager.board.generate_fen()
-                        with open("savegame.fen", "w") as f:
-                            f.write(fen)
+                    if bridge.save_game("savegame.fen"):
                         print("saved game to savegame.fen")
-                    except (PermissionError, OSError) as e:
-                        print(f"failed to save game: {e}")
+                    else:
+                        print("failed to save game")
 
                 elif event.key == pygame.K_l:
                     #  load board state
-                    try:
-                        with open("savegame.fen", "r") as f:
-                            fen = f.read().strip()
-                        if validate_fen(fen):
-                            manager.board.load_fen(fen)
-                            selected_square = None
-                            player_last_move = None
-                            computer_last_move = None
-                            legal_moves_to_draw = []
-                            game_over_state = None
+                    if bridge.load_game("savegame.fen"):
+                        selected_square = None
+                        player_last_move = None
+                        computer_last_move = None
+                        legal_moves_to_draw = []
+                        game_over_state = None
 
-                            #  sprawdz stan gry po wczytaniu
+                        #  sprawdz stan gry po wczytaniu
+                        state = check_and_get_state()
+                        if state != "CONTINUE":
+                            game_over_state = state
+                        elif vs_ai and bridge.white_to_move == ai_color:
+                            do_ai_move(screen, clock)
                             state = check_and_get_state()
                             if state != "CONTINUE":
                                 game_over_state = state
-                            elif vs_ai and manager.board.white_to_move == ai_color:
-                                do_ai_move(screen, clock)
-                                state = check_and_get_state()
-                                if state != "CONTINUE":
-                                    game_over_state = state
 
-                            print("loaded game from savegame.fen")
-                        else:
-                            print("invalid fen string in save file")
-                    except (FileNotFoundError, PermissionError, OSError, ValueError) as e:
-                        print(f"failed to load game: {e}")
+                        print("loaded game from savegame.fen")
+                    else:
+                        print("failed to load game from savegame.fen")
 
                 elif event.key == pygame.K_d:
                     #  zmiana poziomu trudnosci w trakcie gry
@@ -527,32 +526,34 @@ def main():
                     clicked_idx = get_index_from_mouse(pygame.mouse.get_pos(), SQ_SIZE)
                     #  if selected square has figura
                     if selected_square is None:
-
-                        if manager.board.get_piece(clicked_idx) is not None:
+                        if bridge.get_piece(clicked_idx) is not None:
                             selected_square = clicked_idx
-                            print(manager.board.get_piece(clicked_idx))
-                            legal_moves_to_draw = manager.valid_move_ui(selected_square)
+                            print(bridge.get_piece(clicked_idx))
+                            clicked_square_str = REVERT_FILE_DICT[selected_square]
+                            legal_moves_str = bridge.get_legal_moves(clicked_square_str)
+                            legal_moves_to_draw = [FILE_DICT[mv] for mv in legal_moves_str]
                     else:
                         #  second click
                         if selected_square != clicked_idx:
-                            start, target = manager.user_move_parser(selected_square, clicked_idx)
+                            start = REVERT_FILE_DICT[selected_square]
+                            target = REVERT_FILE_DICT[clicked_idx]
                             print("move from {} to {}".format(start, target))
 
                             #  move validation method
-                            legal = manager.try_to_move(selected_square, clicked_idx)
+                            legal = bridge.make_move(start, target)
 
                             if legal:
                                 player_last_move = (selected_square, clicked_idx)
 
                                 #  animate player move
-                                figura_char = manager.board.get_piece(clicked_idx)
-                                animate_move(screen, manager.board, selected_square, clicked_idx, figura_char, clock, player_last_move, computer_last_move)
+                                figura_char = bridge.get_piece(clicked_idx)
+                                animate_move(screen, selected_square, clicked_idx, figura_char, clock, player_last_move, computer_last_move)
 
                                 #  sprawdz stan po ruchu gracza
                                 state = check_and_get_state()
                                 if state != "CONTINUE":
                                     game_over_state = state
-                                elif vs_ai and manager.board.white_to_move == ai_color:
+                                elif vs_ai and bridge.white_to_move == ai_color:
                                     #  ruch ai tylko gdy gra trwa
                                     do_ai_move(screen, clock)
                                     state = check_and_get_state()
@@ -584,7 +585,7 @@ def main():
         if legal_moves_to_draw and not game_over_state:
             draw_legal_moves(screen, legal_moves_to_draw)
 
-        draw_pieces(screen, manager.board)
+        draw_pieces(screen)
 
         #  nakladka konca gry na wierzchu planszy
         if game_over_state:
