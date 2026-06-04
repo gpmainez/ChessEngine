@@ -1,8 +1,6 @@
 import pygame
 import sys
-from engine.Manager import GameManager, get_index_from_mouse
-
-
+from engine.Manager import BasicGameManager, get_index_from_mouse, FisherChessGameManager
 
 pygame.init()
 
@@ -19,7 +17,9 @@ last_move = None
 legal_moves_to_draw = []
 
 Images = {}
-manager = GameManager()
+# manager = BasicGameManager()
+manager = FisherChessGameManager()
+manager.setup_board()
 
 parse_dict = {'wp': "white_pawns", 'wr': "white_rooks", 'wn': "white_knights", 'wb': "white_bishops",
               'wk': "white_king", 'wq': "white_queen", 'bp': "black_pawns", 'br': "black_rooks", 'bn': "black_knights",
