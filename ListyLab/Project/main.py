@@ -59,10 +59,12 @@ async def new_game(req: NewGameRequest):
 
         if chosen == "white":
             ai_color = False #ai czarne
-        else:
+        elif chosen == "black":
             ai_color = True  #ai biale
+        else:
+            ai_color = None  # PvP (both)
 
-        #ruch ai jesli gra jako pierwsze (biale)
+        #ruch ai jesli gra jako pierwsze (biale) i ai jest wlaczone
         if ai_color == True:
             bridge.make_ai_move(3)
 
@@ -90,7 +92,7 @@ async def make_move(move: MoveRequest):
         return {"status": "success", "fen": bridge.get_fen(), "game_over": bridge.get_game_result()}
 
     #wykonaj ruch ai
-    if bridge.white_to_move == ai_color:
+    if ai_color is not None and bridge.white_to_move == ai_color:
         bridge.make_ai_move(3)
 
     state = bridge.get_game_result()
@@ -127,14 +129,15 @@ async def api_load():
             return {"status": "error", "message": "invalid fen string"}
 
         #   trigger ai move if needed
-        if not bridge.is_game_over() and bridge.white_to_move == ai_color:
+        if ai_color is not None and not bridge.is_game_over() and bridge.white_to_move == ai_color:
             bridge.make_ai_move(3)
 
         state = bridge.get_game_result()
         return {
             "status": "success",
             "fen": bridge.get_fen(),
-            "game_over": state
+            "game_over": state,
+            "player_color": "both" if ai_color is None else ("black" if ai_color else "white")
         }
     except Exception as e:
         return {"status": "error", "message": str(e)}

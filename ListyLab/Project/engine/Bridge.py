@@ -125,3 +125,18 @@ class GameInterfaceBridge:
         Returns True if it is currently White's turn, False otherwise.
         """
         return self.manager.board.white_to_move
+
+    def get_king_in_check(self) -> int | None:
+        """
+        Returns the index (0-63) of the king that is currently in check, or None.
+        """
+        white_king_idx = self.manager.board.white_king.bit_length() - 1
+        if white_king_idx >= 0 and self.manager.square_under_attack(white_king_idx, 'black'):
+            return white_king_idx
+
+        black_king_idx = self.manager.board.black_king.bit_length() - 1
+        if black_king_idx >= 0 and self.manager.square_under_attack(black_king_idx, 'white'):
+            return black_king_idx
+
+        return None
+

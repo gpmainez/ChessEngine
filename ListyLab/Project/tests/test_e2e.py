@@ -226,3 +226,22 @@ def test_fools_mate_checkmate():
     data = move_res.json()
     assert data["status"] == "success"
     assert data["game_over"] == "CHECKMATE"
+
+def test_new_game_both_colors_pvp():
+    """Test POST /api/new_game with player_color='both' (PvP mode)."""
+    response = client.post("/api/new_game", json={"mode": "standard", "player_color": "both"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "success"
+    assert data["player_color"] == "both"
+    # Ensure it's white to move and AI didn't play
+    assert data["fen"].split(" ")[1] == "w"
+
+    # Make a move as White (e2 -> e4)
+    move_res = client.post("/api/move", json={"source": "e2", "target": "e4"})
+    assert move_res.status_code == 200
+    data = move_res.json()
+    assert data["status"] == "success"
+    # In PvP mode, AI should NOT make a move. So turn changes to 'b' and stays there.
+    assert data["fen"].split(" ")[1] == "b"
+

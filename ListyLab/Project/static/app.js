@@ -18,6 +18,7 @@ function selectColor(color) {
     document.getElementById('btnWhite').classList.toggle('active', color === 'white');
     document.getElementById('btnBlack').classList.toggle('active', color === 'black');
     document.getElementById('btnRandom').classList.toggle('active', color === 'random');
+    document.getElementById('btnBoth').classList.toggle('active', color === 'both');
 }
 
 function startNewGame() {
@@ -30,9 +31,14 @@ function startNewGame() {
     .then(data => {
         if (data.status === 'success') {
             board.position(data.fen);
+            if (data.player_color === 'black') {
+                board.orientation('black');
+            } else {
+                board.orientation('white');
+            }
             gameOver = false;
             document.getElementById('gameOverBanner').style.display = 'none';
-            var colName = data.player_color === 'white' ? 'białe' : 'czarne';
+            var colName = data.player_color === 'white' ? 'białe' : (data.player_color === 'black' ? 'czarne' : 'Bez AI');
             setStatus('Nowa gra: ' + (selectedMode === 'fisher' ? 'Chess960' : 'standardowe') + ' (' + colName + ')');
         } else {
             setStatus('Blad: ' + data.message);
@@ -90,6 +96,11 @@ function loadGame() {
         .then(d => {
             if (d.status === 'success') {
                 board.position(d.fen);
+                if (d.player_color === 'black') {
+                    board.orientation('black');
+                } else {
+                    board.orientation('white');
+                }
                 gameOver = false;
                 document.getElementById('gameOverBanner').style.display = 'none';
                 if (d.game_over) {

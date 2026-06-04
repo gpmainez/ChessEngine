@@ -33,6 +33,25 @@ current_difficulty = 3 # domyslnie Medium (depth 3)
 
 vs_ai = True
 ai_color = False #czarne to komputer
+flipped = False
+
+def get_coords(idx):
+    if flipped:
+        return idx // 8, 7 - (idx % 8)
+    else:
+        return 7 - (idx // 8), idx % 8
+
+def get_index_from_mouse(pos, sq_size):
+    x, y = pos
+    col = x // sq_size
+    row = y // sq_size
+    if flipped:
+        rank = row
+        file = 7 - col
+    else:
+        rank = 7 - row
+        file = col
+    return (rank * 8) + file
 
 #poziomy trudnosci ai
 DIFFICULTY_LEVELS = [
@@ -53,6 +72,7 @@ COLOR_CHOICES = [
     {"color": "white",  "name": "Biale",  "desc": "zaczynasz gre jako pierwszy"},
     {"color": "black",  "name": "Czarne",  "desc": "komputer zaczyna gre jako pierwszy"},
     {"color": "random", "name": "Losowo",  "desc": "losowy wybor koloru"},
+    {"color": "both",   "name": "Bez AI",  "desc": "ruch obydwoma kolorami (sam ze soba)"},
 ]
 
 parse_dict = {'wp': "white_pawns", 'wr': "white_rooks", 'wn': "white_knights", 'wb': "white_bishops",
@@ -73,8 +93,7 @@ def highlight_square(screen, index, color_rgba):
     if index is None:
         return
 
-    r = 7 - (index // 8)
-    c = index % 8
+    r, c = get_coords(index)
 
     s = pygame.Surface((SQ_SIZE, SQ_SIZE), pygame.SRCALPHA)
     s.fill(color_rgba)
@@ -100,8 +119,7 @@ def draw_pieces(screen, skip_idx=None):
         if char is None:
             continue
 
-        r = 7 - (idx // 8)
-        c = idx % 8
+        r, c = get_coords(idx)
 
         screen.blit(Images[char], pygame.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
@@ -118,8 +136,7 @@ def draw_legal_moves(screen, moves_list):
 
     # calculate index arry[64] -> [r][c]
     for index in moves_list:
-        r = 7 - (index // 8)
-        c = index % 8
+        r, c = get_coords(index)
 
         center_x = c * SQ_SIZE + (SQ_SIZE // 2)
         center_y = r * SQ_SIZE + (SQ_SIZE // 2)
@@ -136,10 +153,8 @@ def animate_move(screen, start, target, figura_char, clock, p_move, c_move):
     if start is None or target is None or figura_char is None:
         return
 
-    start_r = 7 - (start // 8)
-    start_c = start % 8
-    target_r = 7 - (target // 8)
-    target_c = target % 8
+    start_r, start_c = get_coords(start)
+    target_r, target_c = get_coords(target)
 
     start_x = start_c * SQ_SIZE
     start_y = start_r * SQ_SIZE
@@ -160,6 +175,11 @@ def animate_move(screen, start, target, figura_char, clock, p_move, c_move):
         if c_move is not None:
             highlight_square(screen, c_move[0], COLOR_LAST_MOVE)
             highlight_square(screen, c_move[1], COLOR_LAST_MOVE)
+
+        # highlight king in check
+        king_in_check = bridge.get_king_in_check()
+        if king_in_check is not None:
+            highlight_square(screen, king_in_check, (255, 0, 0, 150))
 
         #  draw all figuras except the animating one which is at target
         draw_pieces(screen, skip_idx=target)
@@ -187,6 +207,11 @@ def do_ai_move(screen, clock):
     if computer_last_move is not None:
         highlight_square(screen, computer_last_move[0], COLOR_LAST_MOVE)
         highlight_square(screen, computer_last_move[1], COLOR_LAST_MOVE)
+
+    king_in_check = bridge.get_king_in_check()
+    if king_in_check is not None:
+        highlight_square(screen, king_in_check, (255, 0, 0, 150))
+
     draw_pieces(screen)
     pygame.display.flip()
 
@@ -381,7 +406,7 @@ def draw_color_menu(screen):
 
 def color_menu(screen, clock):
     #ekran wyboru koloru - ustawia globalne ai_color
-    global ai_color
+    global ai_color, vs_ai, flipped
     while True:
         btn_rects = draw_color_menu(screen)
         for event in pygame.event.get():
@@ -393,12 +418,20 @@ def color_menu(screen, clock):
                     if rect.collidepoint(event.pos):
                         chosen = COLOR_CHOICES[i]["color"]
                         if chosen == "white":
+                            vs_ai = True
                             ai_color = False #ai jest czarne
                         elif chosen == "black":
+                            vs_ai = True
                             ai_color = True  #ai jest biale
-                        else:
+                        elif chosen == "random":
+                            vs_ai = True
                             ai_color = random.choice([True, False])
-                        print(f"ai color set to {'white' if ai_color else 'black'}")
+                        elif chosen == "both":
+                            vs_ai = False
+                            ai_color = None
+                        
+                        flipped = (vs_ai and ai_color == True)
+                        print(f"vs_ai set to {vs_ai}, ai color set to {ai_color}, flipped to {flipped}")
                         return
         clock.tick(30)
 
@@ -579,6 +612,10 @@ def main():
         if computer_last_move is not None:
             highlight_square(screen, computer_last_move[0], COLOR_LAST_MOVE)
             highlight_square(screen, computer_last_move[1], COLOR_LAST_MOVE)
+
+        king_in_check = bridge.get_king_in_check()
+        if king_in_check is not None:
+            highlight_square(screen, king_in_check, (255, 0, 0, 150))
 
         if selected_square is not None and not game_over_state:
             highlight_square(screen, selected_square, COLOR_SELECTED)

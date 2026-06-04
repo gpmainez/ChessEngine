@@ -99,3 +99,20 @@ def test_bridge_get_piece():
     assert bridge.get_piece("e1") == "wk"
     assert bridge.get_piece("e7") == "bp"
     assert bridge.get_piece("e4") is None
+
+def test_bridge_get_king_in_check():
+    manager = GameManagerFactory.create("standard")
+    bridge = GameInterfaceBridge(manager)
+    # At start, no king is in check
+    assert bridge.get_king_in_check() is None
+
+    # Setup a check situation:
+    # 1. e2 -> e4
+    # 2. f7 -> f5 (to let queen out)
+    # 3. d1 -> h5 (attacks king on e8)
+    bridge.make_move("e2", "e4")
+    bridge.make_move("f7", "f5")
+    bridge.make_move("d1", "h5")
+    
+    # Black king is on e8 (index 60)
+    assert bridge.get_king_in_check() == 60
