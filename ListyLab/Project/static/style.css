@@ -1,53 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
 body {
-    font-family: "Times New Roman", system-ui;
-    background-color: #344038;
-    color: white;
+    font-family: "Outfit", system-ui, -apple-system, sans-serif;
+    background-color: #1a231e;
+    color: #e2e8f0;
     margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .game-container {
-    text-align: center;
+    position: relative;
+    width: 500px;
+    margin: 0 auto;
 }
 
-/*.top-nav {*/
-/*    background-color: #4a2814;*/
-/*    padding: 30px 30px;*/
-/*    display: flex;*/
-/*    justify-content: space-between;*/
-/*    align-items: center;*/
-/*    box-shadow: 0 4px 10px rgba(0,0,0,0.2);*/
-/*}*/
-
 h1 {
-    font-size: 5rem;
-    margin: 0;
-    font-weight: normal;
+    font-size: 3.5rem;
+    margin: 20px 0 10px 0;
+    font-weight: 700;
     letter-spacing: 2px;
-    position: relative;
-    display: flex;
-    justify-content: center;
-
+    text-align: center;
     text-shadow: 0.06rem 0 0.06rem #ea36af, -0.125rem 0 0.06rem #75fa69;
-    animation-name: textflicker;
-    animation-duration: 0.01s;
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
+    animation: textflicker 0.1s infinite alternate;
 }
 
 p {
-    font-size: 1.4rem;
-    font-weight: lighter;
-    margin-top: 10px;
-    margin-bottom: 20px;
-    opacity: 1;
-    display: flex;
-    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 300;
+    margin-top: 0;
+    margin-bottom: 30px;
+    text-align: center;
+    color: #a7f3d0;
+    text-shadow: 0.03rem 0 0.03rem #ea36af, -0.06rem 0 0.03rem #75fa69;
+    animation: textflicker 0.15s infinite alternate;
+}
 
-    text-shadow: 0.06rem 0 0.06rem #ea36af, -0.125rem 0 0.06rem #75fa69;
-    animation-name: textflicker;
-    animation-duration: 0.01s;
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
+@keyframes textflicker {
+    0% {
+        text-shadow: 0.04rem 0 0.04rem #ea36af, -0.08rem 0 0.04rem #75fa69;
+    }
+    100% {
+        text-shadow: -0.04rem 0 0.04rem #ea36af, 0.08rem 0 0.04rem #75fa69;
+    }
 }
 
 .app-layout {
@@ -55,53 +53,168 @@ p {
     flex-direction: column;
     align-items: center;
     gap: 30px;
-    padding: 40px;
+    padding: 20px;
+    width: 100%;
+    max-width: 900px;
+}
+
+@media (min-width: 768px) {
+    .app-layout {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: center;
+    }
 }
 
 .bar {
     display: flex;
-    flex-direction: row;
-    gap: 10px;
-
+    flex-direction: column;
+    gap: 15px;
+    background: rgba(30, 41, 35, 0.65);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 25px;
+    border-radius: 16px;
+    width: 320px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 #myBoard {
     width: 500px;
-    margin: 0 auto;
-    box-shadow: 0 20px 20px rgba(0, 0, 0, 0.5);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
 }
 
+/* modern buttons */
 button {
-    padding: 15px 25px;
-    background: transparent;
-    border: 2px solid #d8e8d5;
-    color: white;
-    font-size: 14pt;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(216, 232, 213, 0.3);
+    color: #e2e8f0;
+    font-size: 11pt;
+    font-weight: 500;
     font-family: inherit;
-    border-radius: 50px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: 0.3s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 
 button:hover {
-    background-color: #d8e8d5;
-    color: #1a2f23;
-    box-shadow: 0 0 15px rgba(216, 232, 213, 0.8);
+    background-color: #5c8f6e;
+    border-color: #5c8f6e;
+    color: white;
+    box-shadow: 0 0 15px rgba(92, 143, 110, 0.5);
+    transform: translateY(-1px);
 }
 
+button:active {
+    transform: translateY(1px);
+}
+
+/* mode selection specific */
+.mode-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.panel-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin: 0 0 5px 0;
+    text-align: left;
+    text-shadow: none;
+    animation: none;
+}
+
+.mode-btn {
+    text-align: left;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mode-btn.active {
+    background: rgba(92, 143, 110, 0.2);
+    border-color: #5c8f6e;
+    color: #a7f3d0;
+    box-shadow: inset 0 0 8px rgba(92, 143, 110, 0.3);
+}
+
+.start-btn {
+    margin-top: 5px;
+    background: #5c8f6e;
+    border-color: #5c8f6e;
+    font-weight: 600;
+    color: white;
+}
+
+.start-btn:hover {
+    background: #4d7a5c;
+    border-color: #4d7a5c;
+}
+
+.divider {
+    border: 0;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 10px 0;
+}
+
+/* status and game over */
+.status-msg {
+    font-size: 0.95rem;
+    color: #a7f3d0;
+    margin: 5px 0 0 0;
+    text-shadow: none;
+    animation: none;
+    text-align: center;
+}
+
+.game-over-banner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 20, 0.85);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    z-index: 100;
+    gap: 20px;
+    animation: fadeIn 0.4s ease-out;
+}
+
+#gameOverMsg {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #f87171;
+    text-shadow: 0 0 10px rgba(248, 113, 113, 0.3);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* custom chessboard styling overrides */
 .highlight1-32417, .highlight2-9c5d2 {
-
-    background-color: rgba(74, 246, 38, 0.4) !important;
-    box-shadow: inset 0 0 15px rgba(74, 246, 38, 0.8) !important;
+    background-color: rgba(74, 246, 38, 0.3) !important;
+    box-shadow: inset 0 0 10px rgba(74, 246, 38, 0.6) !important;
 }
 
-white-1e1d7 {
-    background-color: #8b9987 !important;
+.white-1e1d7 {
+    background-color: #d8e8d5 !important;
 }
 .black-3c85d {
-    background-color: #4a5946 !important;
+    background-color: #5c8f6e !important;
 }
+
 
 
 

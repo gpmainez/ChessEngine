@@ -1,7 +1,7 @@
 import random
 from abc import abstractmethod, ABC
 
-from engine.Board import Board
+from engine.Board import Board, FILE_DICT
 from engine.Generator import MoveGenerator, calcualte_bit
 
 
@@ -19,15 +19,7 @@ class BaseGameManager(ABC):
     def __init__(self):
         self.board = Board()
         self.generator = MoveGenerator()
-        self.file_dict = {'a1': 0, 'b1': 1, 'c1': 2, 'd1': 3, 'e1': 4, 'f1': 5, 'g1': 6, 'h1': 7,
-                          'a2': 8, 'b2': 9, 'c2': 10, 'd2': 11, 'e2': 12, 'f2': 13, 'g2': 14, 'h2': 15,
-                          'a3': 16, 'b3': 17, 'c3': 18, 'd3': 19, 'e3': 20, 'f3': 21, 'g3': 22, 'h3': 23,
-                          'a4': 24, 'b4': 25, 'c4': 26, 'd4': 27, 'e4': 28, 'f4': 29, 'g4': 30, 'h4': 31,
-                          'a5': 32, 'b5': 33, 'c5': 34, 'd5': 35, 'e5': 36, 'f5': 37, 'g5': 38, 'h5': 39,
-                          'a6': 40, 'b6': 41, 'c6': 42, 'd6': 43, 'e6': 44, 'f6': 45, 'g6': 46, 'h6': 47,
-                          'a7': 48, 'b7': 49, 'c7': 50, 'd7': 51, 'e7': 52, 'f7': 53, 'g7': 54, 'h7': 55,
-                          'a8': 56, 'b8': 57, 'c8': 58, 'd8': 59, 'e8': 60, 'f8': 61, 'g8': 62, 'h8': 63
-                          }
+        self.file_dict = FILE_DICT
         self.revert_file_dict = {value: key for key, value in self.file_dict.items()}
 
         self.parse_dict = {
@@ -56,6 +48,20 @@ class BaseGameManager(ABC):
                 'rook_piece': 'black_rooks', 'rook_start': 0, 'rook_end': 59
             }
         }
+        #domyslna strategia komputera
+        from engine.Strategy import RandomMoveStrategy
+        self.ai_strategy = RandomMoveStrategy()
+
+    #wykonuje ruch komputera
+    def make_ai_move(self) -> bool:
+        if not self.ai_strategy:
+            return False
+        #pobierz najlepszy ruch ze strategii
+        move = self.ai_strategy.get_best_move(self)
+        if move:
+            start, target = move
+            return self.try_to_move(start, target)
+        return False
 
     def piece_validation(self, strt_pos):
         square = self.board.get_piece(strt_pos)
@@ -298,7 +304,7 @@ class BasicGameManager(BaseGameManager):
         # }
 
     def setup_board(self):
-        fen_mask = f"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1"
+        fen_mask = f"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
         self.castle_map['w_long']['rook_start'] = 0
         self.castle_map['b_long']['rook_start'] = 56
 
@@ -578,7 +584,7 @@ class FisherChessGameManager(BaseGameManager):
 
     def setup_board(self):
         fen960 = self.setup_starting_pieces()
-        fen_mask = f"{fen960.lower()}/pppppppp/8/8/8/8/PPPPPPPP/{fen960} w - - 0 1"
+        fen_mask = f"{fen960.lower()}/pppppppp/8/8/8/8/PPPPPPPP/{fen960} w KQkq - 0 1"
         is_first_rook = True
 
         for i, c in enumerate(fen960.upper()):
@@ -653,3 +659,23 @@ class FisherChessGameManager(BaseGameManager):
                 castle_mask |= (1 << end_k)
 
         return castle_mask
+
+
+#wzorzec fabryki - tworzy odpowiedni manager na podstawie trybu gry
+class GameManagerFactory:
+    #dostepne tryby i ich etykiety
+    MODES = {
+        "standard": "Szachy standardowe",
+        "fisher":   "Chess960 (Fischer Random)",
+    }
+
+    @staticmethod
+    def create(mode: str) -> "BaseGameManager":
+        if mode == "standard":
+            m = BasicGameManager()
+        elif mode == "fisher":
+            m = FisherChessGameManager()
+        else:
+            raise ValueError(f"nieznany tryb gry: {mode}")
+        m.setup_board()
+        return m

@@ -1,6 +1,9 @@
 import pygame
 import sys
-from engine.Manager import BasicGameManager, get_index_from_mouse, FisherChessGameManager
+import random
+from engine.Manager import get_index_from_mouse, GameManagerFactory
+from engine.Board import validate_fen
+from engine.Strategy import RandomMoveStrategy, MinimaxAlphaBetaStrategy
 
 pygame.init()
 
@@ -11,15 +14,43 @@ COLOR_DARK = (85, 107, 47)
 
 COLOR_SELECTED = (233, 150, 122)
 COLOR_LAST_MOVE = (194, 202, 134)
+COLOR_MENU_BG = (30, 30, 30)
+COLOR_MENU_BTN = (60, 80, 60)
+COLOR_MENU_HOVER = (90, 120, 90)
+COLOR_MENU_TEXT = (230, 230, 220)
 
 selected_square = None
-last_move = None
+player_last_move = None
+computer_last_move = None
 legal_moves_to_draw = []
 
 Images = {}
-# manager = BasicGameManager()
-manager = FisherChessGameManager()
-manager.setup_board()
+#manager tworzony przez fabryke po wyborze trybu
+manager = GameManagerFactory.create("standard")
+
+vs_ai = True
+ai_color = False #czarne to komputer
+
+#poziomy trudnosci ai
+DIFFICULTY_LEVELS = [
+    {"name": "Extra Easy", "desc": "losowe ruchy", "strategy": RandomMoveStrategy()},
+    {"name": "Easy", "desc": "minimax depth 1", "strategy": MinimaxAlphaBetaStrategy(depth=1)},
+    {"name": "Medium", "desc": "minimax depth 3", "strategy": MinimaxAlphaBetaStrategy(depth=3)},
+    {"name": "Hard", "desc": "minimax depth 5", "strategy": MinimaxAlphaBetaStrategy(depth=5)},
+]
+
+#tryby gry dostepne w menu
+GAME_MODES = [
+    {"mode": "standard", "name": "Szachy standardowe",   "desc": "klasyczny uklad figur"},
+    {"mode": "fisher",   "name": "Chess960 (Fischer)",    "desc": "losowy uklad figur"},
+]
+
+#kolory gracza dostepne w menu
+COLOR_CHOICES = [
+    {"color": "white",  "name": "Biale",  "desc": "zaczynasz gre jako pierwszy"},
+    {"color": "black",  "name": "Czarne",  "desc": "komputer zaczyna gre jako pierwszy"},
+    {"color": "random", "name": "Losowo",  "desc": "losowy wybor koloru"},
+]
 
 parse_dict = {'wp': "white_pawns", 'wr': "white_rooks", 'wn': "white_knights", 'wb': "white_bishops",
               'wk': "white_king", 'wq': "white_queen", 'bp': "black_pawns", 'br': "black_rooks", 'bn': "black_knights",
@@ -54,8 +85,12 @@ def loadImages():
             pygame.image.load("images/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
 
 
-def draw_pieces(screen, board):
+def draw_pieces(screen, board, skip_idx=None):
+    #  draw all figuras on board
+    #   optionally skip drawing one figura
     for idx in range(64):
+        if idx == skip_idx:
+            continue
 
         char = board.get_piece(idx)
 
@@ -90,14 +125,329 @@ def draw_legal_moves(screen, moves_list):
     screen.blit(overlay, (0, 0))
 
 
+def animate_move(screen, board, start, target, figura_char, clock, p_move, c_move):
+    #  lerp animation function
+    #   smoothly slides figura from start to target
+    #  locks input during animation and clears queue
+    if start is None or target is None or figura_char is None:
+        return
+
+    start_r = 7 - (start // 8)
+    start_c = start % 8
+    target_r = 7 - (target // 8)
+    target_c = target % 8
+
+    start_x = start_c * SQ_SIZE
+    start_y = start_r * SQ_SIZE
+    target_x = target_c * SQ_SIZE
+    target_y = target_r * SQ_SIZE
+
+    for step in range(1, 16):
+        t = step / 15.0
+        curr_x = start_x + (target_x - start_x) * t
+        curr_y = start_y + (target_y - start_y) * t
+
+        draw_board(screen)
+
+        #  highlight last moves
+        if p_move is not None:
+            highlight_square(screen, p_move[0], COLOR_LAST_MOVE)
+            highlight_square(screen, p_move[1], COLOR_LAST_MOVE)
+        if c_move is not None:
+            highlight_square(screen, c_move[0], COLOR_LAST_MOVE)
+            highlight_square(screen, c_move[1], COLOR_LAST_MOVE)
+
+        #  draw all figuras except the animating one which is at target
+        draw_pieces(screen, board, skip_idx=target)
+
+        #   draw the animating figura
+        screen.blit(Images[figura_char], pygame.Rect(curr_x, curr_y, SQ_SIZE, SQ_SIZE))
+
+        pygame.display.flip()
+        clock.tick(60)
+        pygame.event.pump()
+
+    #  clear event queue to discard user inputs
+    pygame.event.clear()
+
+
+def do_ai_move(screen, clock):
+    """helper - wykonaj ruch komputera i animuj go"""
+    global computer_last_move, player_last_move
+
+    #  draw board before ai thinks
+    draw_board(screen)
+    if player_last_move is not None:
+        highlight_square(screen, player_last_move[0], COLOR_LAST_MOVE)
+        highlight_square(screen, player_last_move[1], COLOR_LAST_MOVE)
+    if computer_last_move is not None:
+        highlight_square(screen, computer_last_move[0], COLOR_LAST_MOVE)
+        highlight_square(screen, computer_last_move[1], COLOR_LAST_MOVE)
+    draw_pieces(screen, manager.board)
+    pygame.display.flip()
+
+    pygame.display.set_caption("AI mysli...")
+    ai_moved = manager.make_ai_move()
+    pygame.display.set_caption("Python Bitboard Engine GUI")
+
+    if ai_moved and manager.board.moves_history:
+        last_hist = manager.board.moves_history[-1]
+        computer_last_move = (last_hist["start"], last_hist["target"])
+
+        # animate computer move
+        figura_char = manager.board.get_piece(last_hist["target"])
+        animate_move(screen, manager.board, last_hist["start"],
+                     last_hist["target"], figura_char, clock,
+                     player_last_move, computer_last_move)
+
+
+def draw_difficulty_menu(screen):
+    #rysuje menu wyboru trudnosci ai
+    screen.fill(COLOR_MENU_BG)
+
+    font_title = pygame.font.SysFont("Arial", 36, bold=True)
+    font_btn = pygame.font.SysFont("Arial", 22)
+    font_desc = pygame.font.SysFont("Arial", 16)
+
+    title = font_title.render("Wybierz poziom AI", True, COLOR_MENU_TEXT)
+    title_rect = title.get_rect(center=(WIDTH // 2, 60))
+    screen.blit(title, title_rect)
+
+    mouse_pos = pygame.mouse.get_pos()
+    btn_rects = []
+    btn_w = 320
+    btn_h = 70
+    start_y = 120
+    gap = 15
+
+    for i, lvl in enumerate(DIFFICULTY_LEVELS):
+        x = (WIDTH - btn_w) // 2
+        y = start_y + i * (btn_h + gap)
+        rect = pygame.Rect(x, y, btn_w, btn_h)
+
+        #hover effect
+        color = COLOR_MENU_HOVER if rect.collidepoint(mouse_pos) else COLOR_MENU_BTN
+        pygame.draw.rect(screen, color, rect, border_radius=8)
+        pygame.draw.rect(screen, COLOR_MENU_TEXT, rect, width=2, border_radius=8)
+
+        # nazwa poziomu
+        label = font_btn.render(f"{i} - {lvl['name']}", True, COLOR_MENU_TEXT)
+        label_rect = label.get_rect(center=(rect.centerx, rect.y + 25))
+        screen.blit(label, label_rect)
+
+        #opis strategii
+        desc = font_desc.render(lvl["desc"], True, (170, 170, 160))
+        desc_rect = desc.get_rect(center=(rect.centerx, rect.y + 50))
+        screen.blit(desc, desc_rect)
+
+        btn_rects.append(rect)
+
+    #  hint na dole
+    hint = font_desc.render("kliknij aby wybrac poziom trudnosci", True, (130, 130, 120))
+    hint_rect = hint.get_rect(center=(WIDTH // 2, HEIGHT - 40))
+    screen.blit(hint, hint_rect)
+
+    pygame.display.flip()
+    return btn_rects
+
+
+def difficulty_menu(screen, clock):
+    #ekran wyboru trudnosci - blokuje do momentu wyboru
+    while True:
+        btn_rects = draw_difficulty_menu(screen)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                for i, rect in enumerate(btn_rects):
+                    if rect.collidepoint(event.pos):
+                        #ustaw strategie ai
+                        manager.ai_strategy = DIFFICULTY_LEVELS[i]["strategy"]
+                        print(f"ai level set to {DIFFICULTY_LEVELS[i]['name']}")
+                        return
+
+        clock.tick(30)
+
+
+def draw_mode_menu(screen):
+    #rysuje menu wyboru trybu gry
+    screen.fill(COLOR_MENU_BG)
+
+    font_title = pygame.font.SysFont("Arial", 36, bold=True)
+    font_btn   = pygame.font.SysFont("Arial", 22)
+    font_desc  = pygame.font.SysFont("Arial", 16)
+
+    title = font_title.render("Wybierz tryb gry", True, COLOR_MENU_TEXT)
+    screen.blit(title, title.get_rect(center=(WIDTH // 2, 70)))
+
+    mouse_pos = pygame.mouse.get_pos()
+    btn_rects = []
+    btn_w, btn_h, gap = 320, 70, 20
+    start_y = 150
+
+    for i, gm in enumerate(GAME_MODES):
+        x = (WIDTH - btn_w) // 2
+        y = start_y + i * (btn_h + gap)
+        rect = pygame.Rect(x, y, btn_w, btn_h)
+
+        color = COLOR_MENU_HOVER if rect.collidepoint(mouse_pos) else COLOR_MENU_BTN
+        pygame.draw.rect(screen, color, rect, border_radius=8)
+        pygame.draw.rect(screen, COLOR_MENU_TEXT, rect, width=2, border_radius=8)
+
+        label = font_btn.render(gm["name"], True, COLOR_MENU_TEXT)
+        screen.blit(label, label.get_rect(center=(rect.centerx, rect.y + 25)))
+
+        desc = font_desc.render(gm["desc"], True, (170, 170, 160))
+        screen.blit(desc, desc.get_rect(center=(rect.centerx, rect.y + 50)))
+
+        btn_rects.append(rect)
+
+    hint = font_desc.render("kliknij aby wybrac tryb", True, (130, 130, 120))
+    screen.blit(hint, hint.get_rect(center=(WIDTH // 2, HEIGHT - 40)))
+
+    pygame.display.flip()
+    return btn_rects
+
+
+def mode_menu(screen, clock):
+    #ekran wyboru trybu - zwraca wybrany tryb jako string
+    global manager
+    while True:
+        btn_rects = draw_mode_menu(screen)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                for i, rect in enumerate(btn_rects):
+                    if rect.collidepoint(event.pos):
+                        chosen = GAME_MODES[i]["mode"]
+                        #fabryka tworzy nowy manager dla wybranego trybu
+                        manager = GameManagerFactory.create(chosen)
+                        print(f"game mode: {GAME_MODES[i]['name']}")
+                        return
+        clock.tick(30)
+
+
+def draw_color_menu(screen):
+    #rysuje menu wyboru koloru gracza
+    screen.fill(COLOR_MENU_BG)
+
+    font_title = pygame.font.SysFont("Arial", 36, bold=True)
+    font_btn   = pygame.font.SysFont("Arial", 22)
+    font_desc  = pygame.font.SysFont("Arial", 16)
+
+    title = font_title.render("Wybierz swoj kolor", True, COLOR_MENU_TEXT)
+    screen.blit(title, title.get_rect(center=(WIDTH // 2, 70)))
+
+    mouse_pos = pygame.mouse.get_pos()
+    btn_rects = []
+    btn_w, btn_h, gap = 320, 70, 15
+    start_y = 140
+
+    for i, col in enumerate(COLOR_CHOICES):
+        x = (WIDTH - btn_w) // 2
+        y = start_y + i * (btn_h + gap)
+        rect = pygame.Rect(x, y, btn_w, btn_h)
+
+        color = COLOR_MENU_HOVER if rect.collidepoint(mouse_pos) else COLOR_MENU_BTN
+        pygame.draw.rect(screen, color, rect, border_radius=8)
+        pygame.draw.rect(screen, COLOR_MENU_TEXT, rect, width=2, border_radius=8)
+
+        label = font_btn.render(col["name"], True, COLOR_MENU_TEXT)
+        screen.blit(label, label.get_rect(center=(rect.centerx, rect.y + 25)))
+
+        desc = font_desc.render(col["desc"], True, (170, 170, 160))
+        screen.blit(desc, desc.get_rect(center=(rect.centerx, rect.y + 50)))
+
+        btn_rects.append(rect)
+
+    hint = font_desc.render("kliknij aby wybrac kolor", True, (130, 130, 120))
+    screen.blit(hint, hint.get_rect(center=(WIDTH // 2, HEIGHT - 30)))
+
+    pygame.display.flip()
+    return btn_rects
+
+
+def color_menu(screen, clock):
+    #ekran wyboru koloru - ustawia globalne ai_color
+    global ai_color
+    while True:
+        btn_rects = draw_color_menu(screen)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                for i, rect in enumerate(btn_rects):
+                    if rect.collidepoint(event.pos):
+                        chosen = COLOR_CHOICES[i]["color"]
+                        if chosen == "white":
+                            ai_color = False #ai jest czarne
+                        elif chosen == "black":
+                            ai_color = True  #ai jest biale
+                        else:
+                            ai_color = random.choice([True, False])
+                        print(f"ai color set to {'white' if ai_color else 'black'}")
+                        return
+        clock.tick(30)
+
+
+def draw_game_over(screen, state):
+    #rysuje overlay po koncu gry
+    overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 170))
+    screen.blit(overlay, (0, 0))
+
+    font_big = pygame.font.SysFont("Arial", 42, bold=True)
+    font_sub = pygame.font.SysFont("Arial", 20)
+
+    if state == "CHECKMATE":
+        #kto wygral - przeciwna strona do tej ktora nie ma ruchow
+        winner = "Czarny" if manager.board.white_to_move else "Bialy"
+        msg = f"SZACH MAT! Wygrywa {winner}"
+        color = (220, 80, 60)
+    else:
+        msg = "REMIS - PAT"
+        color = (180, 180, 80)
+
+    text = font_big.render(msg, True, color)
+    text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 20))
+    screen.blit(text, text_rect)
+
+    #podpowiedz restart
+    hint = font_sub.render("Nacisnij R aby zagrac ponownie", True, (200, 200, 200))
+    hint_rect = hint.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 30))
+    screen.blit(hint, hint_rect)
+
+
+def check_and_get_state():
+    #sprawdza stan gry i zwraca go
+    return manager.check_game_state()
+
+
 def main():
-    global selected_square, last_move, legal_moves_to_draw
+    global selected_square, player_last_move, computer_last_move, legal_moves_to_draw
 
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Python Bitboard Engine GUI")
     clock = pygame.time.Clock()
 
     loadImages()
+
+    # najpierw wybor trybu gry potem trudnosci i koloru
+    mode_menu(screen, clock)
+    difficulty_menu(screen, clock)
+    color_menu(screen, clock)
+
+    #   wykonaj ruch ai jesli gra jako pierwsze (biale)
+    if vs_ai and manager.board.white_to_move == ai_color:
+        do_ai_move(screen, clock)
+
+    game_over_state = None  #None CHECKMATE lub STALEMATE
 
     while True:
 
@@ -106,10 +456,76 @@ def main():
                 pygame.quit()
                 sys.exit()
 
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    #  restart - wybierz tryb trudnosc i kolor od nowa
+                    selected_square = None
+                    player_last_move = None
+                    computer_last_move = None
+                    legal_moves_to_draw = []
+                    game_over_state = None
+                    mode_menu(screen, clock)
+                    difficulty_menu(screen, clock)
+                    color_menu(screen, clock)
+                    if vs_ai and manager.board.white_to_move == ai_color:
+                        do_ai_move(screen, clock)
+                    continue
+
+                #  zablokuj klawisze podczas game over (oprocz R i Q)
+                if game_over_state:
+                    continue
+
+                if event.key == pygame.K_s:
+                    #   save board state
+                    try:
+                        fen = manager.board.generate_fen()
+                        with open("savegame.fen", "w") as f:
+                            f.write(fen)
+                        print("saved game to savegame.fen")
+                    except (PermissionError, OSError) as e:
+                        print(f"failed to save game: {e}")
+
+                elif event.key == pygame.K_l:
+                    #  load board state
+                    try:
+                        with open("savegame.fen", "r") as f:
+                            fen = f.read().strip()
+                        if validate_fen(fen):
+                            manager.board.load_fen(fen)
+                            selected_square = None
+                            player_last_move = None
+                            computer_last_move = None
+                            legal_moves_to_draw = []
+                            game_over_state = None
+
+                            #  sprawdz stan gry po wczytaniu
+                            state = check_and_get_state()
+                            if state != "CONTINUE":
+                                game_over_state = state
+                            elif vs_ai and manager.board.white_to_move == ai_color:
+                                do_ai_move(screen, clock)
+                                state = check_and_get_state()
+                                if state != "CONTINUE":
+                                    game_over_state = state
+
+                            print("loaded game from savegame.fen")
+                        else:
+                            print("invalid fen string in save file")
+                    except (FileNotFoundError, PermissionError, OSError, ValueError) as e:
+                        print(f"failed to load game: {e}")
+
+                elif event.key == pygame.K_d:
+                    #  zmiana poziomu trudnosci w trakcie gry
+                    difficulty_menu(screen, clock)
+
             elif event.type == pygame.MOUSEBUTTONDOWN:
+                #  blokada klikania po koncu gry
+                if game_over_state:
+                    continue
+
                 if event.button == 1:
                     clicked_idx = get_index_from_mouse(pygame.mouse.get_pos(), SQ_SIZE)
-                    # if selecetd square is piece
+                    #  if selected square has figura
                     if selected_square is None:
 
                         if manager.board.get_piece(clicked_idx) is not None:
@@ -117,16 +533,31 @@ def main():
                             print(manager.board.get_piece(clicked_idx))
                             legal_moves_to_draw = manager.valid_move_ui(selected_square)
                     else:
-                        # second click
+                        #  second click
                         if selected_square != clicked_idx:
                             start, target = manager.user_move_parser(selected_square, clicked_idx)
                             print("move from {} to {}".format(start, target))
 
-                            # move validation method
+                            #  move validation method
                             legal = manager.try_to_move(selected_square, clicked_idx)
 
                             if legal:
-                                last_move = (selected_square, clicked_idx)
+                                player_last_move = (selected_square, clicked_idx)
+
+                                #  animate player move
+                                figura_char = manager.board.get_piece(clicked_idx)
+                                animate_move(screen, manager.board, selected_square, clicked_idx, figura_char, clock, player_last_move, computer_last_move)
+
+                                #  sprawdz stan po ruchu gracza
+                                state = check_and_get_state()
+                                if state != "CONTINUE":
+                                    game_over_state = state
+                                elif vs_ai and manager.board.white_to_move == ai_color:
+                                    #  ruch ai tylko gdy gra trwa
+                                    do_ai_move(screen, clock)
+                                    state = check_and_get_state()
+                                    if state != "CONTINUE":
+                                        game_over_state = state
                             else:
                                 print("err")
 
@@ -140,16 +571,24 @@ def main():
 
         draw_board(screen)
 
-        if last_move is not None:
-            highlight_square(screen, last_move[0], COLOR_LAST_MOVE)
-            highlight_square(screen, last_move[1], COLOR_LAST_MOVE)
+        if player_last_move is not None:
+            highlight_square(screen, player_last_move[0], COLOR_LAST_MOVE)
+            highlight_square(screen, player_last_move[1], COLOR_LAST_MOVE)
 
-        if selected_square is not None:
+        if computer_last_move is not None:
+            highlight_square(screen, computer_last_move[0], COLOR_LAST_MOVE)
+            highlight_square(screen, computer_last_move[1], COLOR_LAST_MOVE)
+
+        if selected_square is not None and not game_over_state:
             highlight_square(screen, selected_square, COLOR_SELECTED)
-        if legal_moves_to_draw:
+        if legal_moves_to_draw and not game_over_state:
             draw_legal_moves(screen, legal_moves_to_draw)
 
         draw_pieces(screen, manager.board)
+
+        #  nakladka konca gry na wierzchu planszy
+        if game_over_state:
+            draw_game_over(screen, game_over_state)
 
         pygame.display.flip()
         clock.tick(60)

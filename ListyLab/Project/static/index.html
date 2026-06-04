@@ -2,13 +2,11 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Mój Silnik Szachowy</title>
-
+    <title>Bitboard Chess Engine</title>
 
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
-
 
     <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -19,16 +17,43 @@
 <main class="app-layout">
     <div class="game-container">
         <div id="myBoard"></div>
+
+        <!-- komunikat konca gry -->
+        <div id="gameOverBanner" class="game-over-banner" style="display:none;">
+            <span id="gameOverMsg"></span>
+            <button id="restartBtn" onclick="showModePanel()">Nowa gra</button>
+        </div>
     </div>
 
     <div class="bar">
-        <button>Redo move</button>
-        <button>Ciapak Rzysztof</button>
+        <!-- panel wyboru trybu gry -->
+        <div id="modePanel" class="mode-panel">
+            <p class="panel-title">Tryb gry</p>
+            <button id="btnStandard" class="mode-btn active" onclick="selectMode('standard')">
+                Szachy standardowe
+            </button>
+            <button id="btnFisher" class="mode-btn" onclick="selectMode('fisher')">
+                Chess960 (Fischer)
+            </button>
+
+            <p class="panel-title" style="margin-top: 15px;">Twój kolor</p>
+            <div class="color-options" style="display: flex; gap: 8px; margin-bottom: 10px;">
+                <button id="btnWhite" class="color-btn active" style="flex: 1; padding: 8px 5px; font-size: 10pt;" onclick="selectColor('white')">Białe</button>
+                <button id="btnBlack" class="color-btn" style="flex: 1; padding: 8px 5px; font-size: 10pt;" onclick="selectColor('black')">Czarne</button>
+                <button id="btnRandom" class="color-btn" style="flex: 1; padding: 8px 5px; font-size: 10pt;" onclick="selectColor('random')">Losowo</button>
+            </div>
+
+            <button class="start-btn" onclick="startNewGame()">Rozpocznij nową grę</button>
+        </div>
+
+        <hr class="divider">
+
+        <button onclick="saveGame()">Zapisz grę</button>
+        <button onclick="loadGame()">Wczytaj grę</button>
+        <p id="statusMsg" class="status-msg"></p>
     </div>
 </main>
-
 
 <script src="/static/app.js"></script>
 </body>
 </html>
-

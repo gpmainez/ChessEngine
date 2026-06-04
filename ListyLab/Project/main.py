@@ -4,38 +4,33 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
-from engine.Manager import GameManager
+from engine.Board import FILE_DICT, validate_fen
+from engine.Manager import GameManagerFactory
+from engine.Strategy import MinimaxAlphaBetaStrategy
 
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="static")
 
-# ---------------------------------------------------------
-# 1. NASZ TŁUMACZ (Słownik i funkcja z Twojego pomysłu)
-# ---------------------------------------------------------
-FILE_DICT = {
-    'a1': 0, 'b1': 1, 'c1': 2, 'd1': 3, 'e1': 4, 'f1': 5, 'g1': 6, 'h1': 7,
-    'a2': 8, 'b2': 9, 'c2': 10, 'd2': 11, 'e2': 12, 'f2': 13, 'g2': 14, 'h2': 15,
-    'a3': 16, 'b3': 17, 'c3': 18, 'd3': 19, 'e3': 20, 'f3': 21, 'g3': 22, 'h3': 23,
-    'a4': 24, 'b4': 25, 'c4': 26, 'd4': 27, 'e4': 28, 'f4': 29, 'g4': 30, 'h4': 31,
-    'a5': 32, 'b5': 33, 'c5': 34, 'd5': 35, 'e5': 36, 'f5': 37, 'g5': 38, 'h5': 39,
-    'a6': 40, 'b6': 41, 'c6': 42, 'd6': 43, 'e6': 44, 'f6': 45, 'g6': 46, 'h6': 47,
-    'a7': 48, 'b7': 49, 'c7': 50, 'd7': 51, 'e7': 52, 'f7': 53, 'g7': 54, 'h7': 55,
-    'a8': 56, 'b8': 57, 'c8': 58, 'd8': 59, 'e8': 60, 'f8': 61, 'g8': 62, 'h8': 63
-}
+#inicjalizacja - domyslnie szachy standardowe z ai medium
+manager = GameManagerFactory.create("standard")
+manager.ai_strategy = MinimaxAlphaBetaStrategy(depth=3)
+ai_color = False
 
-
+#   slownik i funkcja tlumaczaca
 def parse_move_to_index(square_str):
     return FILE_DICT[square_str]
 
 
-# ---------------------------------------------------------
-
 class MoveRequest(BaseModel):
     source: str
     target: str
-    user_api = GameManager()
+
+
+class NewGameRequest(BaseModel):
+    mode: str = "standard"
+    player_color: str = "white"
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -43,19 +38,111 @@ async def read_root(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")
 
 
+@app.get("/api/modes")
+async def get_modes():
+    #zwraca dostepne tryby gry
+    return {"modes": GameManagerFactory.MODES}
+
+
+@app.post("/api/new_game")
+async def new_game(req: NewGameRequest):
+    #   tworzy nowa gre z wybranym trybem przez fabryke
+    global manager, ai_color
+    try:
+        manager = GameManagerFactory.create(req.mode)
+        manager.ai_strategy = MinimaxAlphaBetaStrategy(depth=3)
+
+        #ustalenie koloru gracza i ai
+        import random as rand
+        chosen = req.player_color
+        if chosen == "random":
+            chosen = rand.choice(["white", "black"])
+
+        if chosen == "white":
+            ai_color = False #ai czarne
+        else:
+            ai_color = True  #ai biale
+
+        #ruch ai jesli gra jako pierwsze (biale)
+        if ai_color == True:
+            manager.make_ai_move()
+
+        return {"status": "success", "mode": req.mode, "player_color": chosen, "fen": manager.board.generate_fen()}
+    except ValueError as e:
+        return {"status": "error", "message": str(e)}
+
+
 @app.post("/api/move")
 async def make_move(move: MoveRequest):
-    print(f"--- NOWY RUCH Z PRZEGLĄDARKI ---")
+    print(f"--- NOWY RUCH Z PRZEGLADARKI ---")
     print(f"Otrzymano tekstowo: z {move.source} na {move.target}")
 
+    start_pos = parse_move_to_index(move.source)
+    target_pos = parse_move_to_index(move.target)
 
-    start_pos, target_pos = move.user_api.web_move_parser(move.source, move.target)
-
-
-
-    print(f"Przetłumaczono na indeksy silnika: z {start_pos} na {target_pos}")
+    print(f"Przetlumaczono na indeksy silnika: z {start_pos} na {target_pos}")
     print(f"--------------------------------")
 
-    # Na razie wysyłamy do frontu błąd, zeby bierka "odbijała się"
-    # z powrotem. W następnym kroku podepniemy tu Twój silnik!
-    return {"status": "error"}
+    #sprobuj wykonac ruch gracza
+    legal = manager.try_to_move(start_pos, target_pos)
+    if not legal:
+        return {"status": "error"}
+
+    #sprawdz stan po ruchu gracza
+    state = manager.check_game_state()
+    if state != "CONTINUE":
+        return {"status": "success", "fen": manager.board.generate_fen(), "game_over": state}
+
+    #wykonaj ruch ai
+    if manager.board.white_to_move == ai_color:
+        manager.make_ai_move()
+
+    state = manager.check_game_state()
+    return {
+        "status": "success",
+        "fen": manager.board.generate_fen(),
+        "game_over": state if state != "CONTINUE" else None
+    }
+
+
+@app.get("/api/save")
+@app.post("/api/save")
+async def api_save():
+    #   save board state to file
+    try:
+        fen = manager.board.generate_fen()
+        with open("savegame.fen", "w") as f:
+            f.write(fen)
+        return {"status": "success", "fen": fen}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@app.get("/api/load")
+@app.post("/api/load")
+async def api_load():
+    #  load board state from file
+    try:
+        with open("savegame.fen", "r") as f:
+            fen = f.read().strip()
+        if not validate_fen(fen):
+            return {"status": "error", "message": "invalid fen string"}
+
+        manager.board.load_fen(fen)
+
+        #   trigger ai move if needed
+        state = manager.check_game_state()
+        if state == "CONTINUE" and manager.board.white_to_move == ai_color:
+            manager.make_ai_move()
+            state = manager.check_game_state()
+
+        return {
+            "status": "success",
+            "fen": manager.board.generate_fen(),
+            "game_over": state if state != "CONTINUE" else None
+        }
+    except FileNotFoundError:
+        return {"status": "error", "message": "savegame file not found"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+

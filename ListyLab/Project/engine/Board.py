@@ -1,4 +1,89 @@
-from Demos.mmapfile_demo import offset
+#slownik tlumaczacy pola na indeksy
+FILE_DICT = {
+    'a1': 0, 'b1': 1, 'c1': 2, 'd1': 3, 'e1': 4, 'f1': 5, 'g1': 6, 'h1': 7,
+    'a2': 8, 'b2': 9, 'c2': 10, 'd2': 11, 'e2': 12, 'f2': 13, 'g2': 14, 'h2': 15,
+    'a3': 16, 'b3': 17, 'c3': 18, 'd3': 19, 'e3': 20, 'f3': 21, 'g3': 22, 'h3': 23,
+    'a4': 24, 'b4': 25, 'c4': 26, 'd4': 27, 'e4': 28, 'f4': 29, 'g4': 30, 'h4': 31,
+    'a5': 32, 'b5': 33, 'c5': 34, 'd5': 35, 'e5': 36, 'f5': 37, 'g5': 38, 'h5': 39,
+    'a6': 40, 'b6': 41, 'c6': 42, 'd6': 43, 'e6': 44, 'f6': 45, 'g6': 46, 'h6': 47,
+    'a7': 48, 'b7': 49, 'c7': 50, 'd7': 51, 'e7': 52, 'f7': 53, 'g7': 54, 'h7': 55,
+    'a8': 56, 'b8': 57, 'c8': 58, 'd8': 59, 'e8': 60, 'f8': 61, 'g8': 62, 'h8': 63
+}
+
+
+REVERT_FILE_DICT = {value: key for key, value in FILE_DICT.items()}
+
+
+def validate_fen(fen):
+    #   validate fen structure
+    if not isinstance(fen, str):
+        return False
+    parts = fen.strip().split(" ")
+    if len(parts) != 6:
+        return False
+    
+    #  validate piece placement
+    rows = parts[0].split("/")
+    if len(rows) != 8:
+        return False
+    valid_pieces = set("pnbrqkPNBRQK")
+    for row in rows:
+        row_sum = 0
+        for char in row:
+            if char.isdigit():
+                val = int(char)
+                if not (1 <= val <= 8):
+                    return False
+                row_sum += val
+            elif char in valid_pieces:
+                row_sum += 1
+            else:
+                return False
+        if row_sum != 8:
+            return False
+            
+    #  validate active color
+    if parts[1] not in ("w", "b"):
+        return False
+        
+    #    validate castling rights
+    castling = parts[2]
+    if castling != "-":
+        if not (1 <= len(castling) <= 4):
+            return False
+        seen = set()
+        for char in castling:
+            if char not in ("K", "Q", "k", "q"):
+                return False
+            if char in seen:
+                return False
+            seen.add(char)
+            
+    # validate en passant
+    ep = parts[3]
+    if ep != "-":
+        if len(ep) != 2:
+            return False
+        if ep[0] not in "abcdefgh" or ep[1] not in "36":
+            return False
+            
+    #   validate halfmove clock
+    try:
+        halfmove = int(parts[4])
+        if halfmove < 0:
+            return False
+    except ValueError:
+        return False
+        
+    #  validate fullmove number
+    try:
+        fullmove = int(parts[5])
+        if fullmove <= 0:
+            return False
+    except ValueError:
+        return False
+        
+    return True
 
 
 class Board:
@@ -29,15 +114,7 @@ class Board:
         self.white_to_move = True
         self.moves_history = []
 
-        self.file_dict = {'a1': 0, 'b1': 1, 'c1': 2, 'd1': 3, 'e1': 4, 'f1': 5, 'g1': 6, 'h1': 7,
-                          'a2': 8, 'b2': 9, 'c2': 10, 'd2': 11, 'e2': 12, 'f2': 13, 'g2': 14, 'h2': 15,
-                          'a3': 16, 'b3': 17, 'c3': 18, 'd3': 19, 'e3': 20, 'f3': 21, 'g3': 22, 'h3': 23,
-                          'a4': 24, 'b4': 25, 'c4': 26, 'd4': 27, 'e4': 28, 'f4': 29, 'g4': 30, 'h4': 31,
-                          'a5': 32, 'b5': 33, 'c5': 34, 'd5': 35, 'e5': 36, 'f5': 37, 'g5': 38, 'h5': 39,
-                          'a6': 40, 'b6': 41, 'c6': 42, 'd6': 43, 'e6': 44, 'f6': 45, 'g6': 46, 'h6': 47,
-                          'a7': 48, 'b7': 49, 'c7': 50, 'd7': 51, 'e7': 52, 'f7': 53, 'g7': 54, 'h7': 55,
-                          'a8': 56, 'b8': 57, 'c8': 58, 'd8': 59, 'e8': 60, 'f8': 61, 'g8': 62, 'h8': 63
-                          }
+        self.file_dict = FILE_DICT
 
     @property
     def white_pieces(self):
@@ -191,6 +268,32 @@ class Board:
                     self._set_piece_by_char(char, square)
                     file += 1
 
+        #   parse active player turn
+        if len(parts) > 1:
+            self.white_to_move = (parts[1] == 'w')
+
+        #  parse castling rights
+        if len(parts) > 2:
+            self.castling_rights = 0
+            castling = parts[2]
+            if castling != '-':
+                if 'K' in castling:
+                    self.castling_rights |= 0b0001
+                if 'Q' in castling:
+                    self.castling_rights |= 0b0010
+                if 'k' in castling:
+                    self.castling_rights |= 0b0100
+                if 'q' in castling:
+                    self.castling_rights |= 0b1000
+
+        #   parse en passant target
+        if len(parts) > 3:
+            ep = parts[3]
+            if ep == '-':
+                self.en_passant_target = None
+            else:
+                self.en_passant_target = FILE_DICT.get(ep)
+
     def _set_piece_by_char(self, char, square):
         piecie_dict = {
             'P': 'white_pawns', 'R': 'white_rooks', 'N': 'white_knights',
@@ -241,7 +344,26 @@ class Board:
         ranks_part = "/".join(fen_rows)
         to_move = "w" if self.white_to_move else "b"
 
-        return f"{ranks_part} {to_move} - - 0 1"
+        #  generate castling rights
+        castle_str = ""
+        if self.castling_rights & 0b0001:
+            castle_str += "K"
+        if self.castling_rights & 0b0010:
+            castle_str += "Q"
+        if self.castling_rights & 0b0100:
+            castle_str += "k"
+        if self.castling_rights & 0b1000:
+            castle_str += "q"
+        if not castle_str:
+            castle_str = "-"
+
+        #   generate en passant target
+        if self.en_passant_target is None:
+            ep_str = "-"
+        else:
+            ep_str = REVERT_FILE_DICT.get(self.en_passant_target, "-")
+
+        return f"{ranks_part} {to_move} {castle_str} {ep_str} 0 1"
 
     def get_piece(self, square_idx):
         target = 1 << square_idx
