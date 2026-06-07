@@ -124,24 +124,31 @@ def draw_pieces(screen, skip_idx=None):
         screen.blit(Images[char], pygame.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 
-
 def draw_legal_moves(screen, moves_list):
     if not moves_list:
         return
 
     overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
 
-    CIRCLE_COLOR = (120, 135, 95)
-    circle_radius = SQ_SIZE // 6
 
-    # calculate index arry[64] -> [r][c]
+    CIRCLE_COLOR = (120, 135, 95, 150)
+
+    dot_radius = SQ_SIZE // 6
+    ring_radius = SQ_SIZE // 2 - 5
+    ring_thickness = 6
+
     for index in moves_list:
         r, c = get_coords(index)
 
         center_x = c * SQ_SIZE + (SQ_SIZE // 2)
         center_y = r * SQ_SIZE + (SQ_SIZE // 2)
 
-        pygame.draw.circle(overlay, CIRCLE_COLOR, (center_x, center_y), circle_radius)
+
+        if bridge.get_piece(index) is not None:
+            pygame.draw.circle(overlay, CIRCLE_COLOR, (center_x, center_y), ring_radius, ring_thickness)
+        else:
+
+            pygame.draw.circle(overlay, CIRCLE_COLOR, (center_x, center_y), dot_radius)
 
     screen.blit(overlay, (0, 0))
 
