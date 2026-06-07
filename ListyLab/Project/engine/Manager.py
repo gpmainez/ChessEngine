@@ -180,7 +180,7 @@ class BaseGameManager(ABC):
         else:
             return "STALEMATE"
 
-    def make_move_engine(self, start_pos, target_pos):
+    def make_move_engine(self, start_pos, target_pos, promo_choice='q'):
         piece = self.parse_dict[self.board.get_piece(start_pos)]
         target_piece = self.board.get_piece(target_pos)
 
@@ -214,26 +214,23 @@ class BaseGameManager(ABC):
         if piece == "white_pawns" or piece == "black_pawns":
             if target_pos == self.board.en_passant_target and abs(start_pos - target_pos) in [7, 9]:
                 en_passant = True
-
-                if piece == 'white_pawns':
-                    capture = 'black_pawns'
-                else:
-                    capture = 'white_pawns'
-
+                capture = 'black_pawns' if piecie_color else 'white_pawns'
             else:
                 capture = self.parse_dict[target_piece] if target_piece else None
-
                 target_row = target_pos // 8
+
                 if target_row == 7 and piece == "white_pawns":
-                    promotion = 'white_queen'
+                    promo_dict = {'q': 'white_queen', 'r': 'white_rooks', 'b': 'white_bishops', 'n': 'white_knights'}
+                    promotion = promo_dict.get(promo_choice, 'white_queen')
                 elif target_row == 0 and piece == "black_pawns":
-                    promotion = 'black_queen'
+                    promo_dict = {'q': 'black_queen', 'r': 'black_rooks', 'b': 'black_bishops', 'n': 'black_knights'}
+                    promotion = promo_dict.get(promo_choice, 'black_queen')
         else:
             capture = self.parse_dict[target_piece] if target_piece else None
 
         self.board.make_move(piece, start_pos, target_pos, capture, en_passant, promotion, rook_move, castle_mask)
 
-    def try_to_move(self, start_pos, target_pos):
+    def try_to_move(self, start_pos, target_pos,promo_choice='q'):
 
         moves = self.legal_moves(start_pos)
 
@@ -249,7 +246,7 @@ class BaseGameManager(ABC):
         if piecie_color != self.board.white_to_move:
             return False
 
-        self.make_move_engine(start_pos, target_pos)
+        self.make_move_engine(start_pos, target_pos,promo_choice)
 
         state = self.check_game_state()
         if state == "CHECKMATE":

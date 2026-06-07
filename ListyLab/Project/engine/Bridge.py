@@ -9,7 +9,7 @@ class GameInterfaceBridge:
         """
         self.manager = manager
 
-    def make_move(self, source_square: str, target_square: str) -> bool:
+    def make_move(self, source_square: str, target_square: str, promo_choice: str = 'q') -> bool:
         """
         Attempts to make a player move using algebraic square coordinates.
         Returns True if the move is legal and was successfully executed; False otherwise.
@@ -18,7 +18,9 @@ class GameInterfaceBridge:
             return False
         start_idx = FILE_DICT[source_square]
         target_idx = FILE_DICT[target_square]
-        return self.manager.try_to_move(start_idx, target_idx)
+
+        # PRZEKAZUJEMY promo_choice DO MANAGERA
+        return self.manager.try_to_move(start_idx, target_idx, promo_choice)
 
     def make_ai_move(self, difficulty: int) -> tuple[str, str] | None:
         """

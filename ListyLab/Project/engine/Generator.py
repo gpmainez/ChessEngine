@@ -40,6 +40,7 @@ def compute_slider_moves(arrays, directions_dict, square, all_pieces, same_color
         obstacle = arrays[dir_name][square] & all_pieces
         if obstacle:
             if sense > 0:
+                #to get first piece if we move up bit length return index(in this case)
                 lowest_bit = obstacle & -obstacle
                 lowest_bit_idx = lowest_bit.bit_length() - 1
             else:
@@ -50,7 +51,7 @@ def compute_slider_moves(arrays, directions_dict, square, all_pieces, same_color
 
     return moves & ~same_color_pieces
 
-
+#change bit to index
 def calcualte_bit(mask):
     squares = []
 
@@ -149,6 +150,7 @@ class MoveGenerator:
                     double_move = square - 16
                     if not (all_pieces & (1 << double_move)):
                         moves |= (1 << double_move)
+
         attacks = self.black_pawn_attacks[square]
         captures = attacks & white_pieces
 

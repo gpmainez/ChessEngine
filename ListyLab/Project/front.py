@@ -436,6 +436,45 @@ def color_menu(screen, clock):
         clock.tick(30)
 
 
+def choose_promotion(screen, color_prefix, clock):
+    pieces_to_draw = [f'{color_prefix}q', f'{color_prefix}r', f'{color_prefix}b', f'{color_prefix}n']
+    promo_codes = ['q', 'r', 'b', 'n']
+
+
+    overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 180))
+    screen.blit(overlay, (0, 0))
+
+
+    menu_w, menu_h = 4 * SQ_SIZE + 20, SQ_SIZE + 20
+    menu_x = (WIDTH - menu_w) // 2
+    menu_y = (HEIGHT - menu_h) // 2
+
+    pygame.draw.rect(screen, COLOR_LIGHT, (menu_x, menu_y, menu_w, menu_h), border_radius=10)
+    pygame.draw.rect(screen, COLOR_DARK, (menu_x, menu_y, menu_w, menu_h), width=4, border_radius=10)
+
+
+    rects = []
+    for i, piece_key in enumerate(pieces_to_draw):
+        px = menu_x + 10 + (i * SQ_SIZE)
+        py = menu_y + 10
+        screen.blit(Images[piece_key], (px, py))
+        rects.append(pygame.Rect(px, py, SQ_SIZE, SQ_SIZE))
+
+    pygame.display.flip()
+
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                for i, rect in enumerate(rects):
+                    if rect.collidepoint(event.pos):
+                        return promo_codes[i]
+        clock.tick(30)
+
 def draw_game_over(screen, state):
     #rysuje overlay po koncu gry
     overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
@@ -570,10 +609,20 @@ def main():
                         if selected_square != clicked_idx:
                             start = REVERT_FILE_DICT[selected_square]
                             target = REVERT_FILE_DICT[clicked_idx]
-                            print("move from {} to {}".format(start, target))
 
-                            #  move validation method
-                            legal = bridge.make_move(start, target)
+                            moving_piece = bridge.get_piece(selected_square)
+                            target_row = clicked_idx // 8
+
+
+                            promo_choice = 'q'
+
+                            if moving_piece == 'wp' and target_row == 7:
+                                promo_choice = choose_promotion(screen, 'w', clock)
+                            elif moving_piece == 'bp' and target_row == 0:
+                                promo_choice = choose_promotion(screen, 'b', clock)
+
+
+                            legal = bridge.make_move(start, target, promo_choice)
 
                             if legal:
                                 player_last_move = (selected_square, clicked_idx)
