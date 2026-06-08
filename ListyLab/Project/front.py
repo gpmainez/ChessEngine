@@ -547,7 +547,7 @@ def check_and_get_state():
 
 
 def main():
-    global selected_square, player_last_move, computer_last_move, legal_moves_to_draw
+    global selected_square, player_last_move, computer_last_move, legal_moves_to_draw, vs_ai, ai_color, current_difficulty, flipped
 
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Python Bitboard Engine GUI")
@@ -620,7 +620,22 @@ def main():
 
                 elif event.key == pygame.K_d:
                     #  zmiana poziomu trudnosci w trakcie gry
-                    difficulty_menu(screen, clock)
+                    res = difficulty_menu(screen, clock)
+                    if res != "back":
+                        if res == "both":
+                            vs_ai = False
+                            ai_color = None
+                        else:
+                            vs_ai = True
+                            current_difficulty = res
+                            if ai_color is None:
+                                ai_color = not bridge.white_to_move
+                            if bridge.white_to_move == ai_color:
+                                do_ai_move(screen, clock)
+                                state = check_and_get_state()
+                                if state != "CONTINUE":
+                                    game_over_state = state
+                        flipped = (vs_ai and ai_color == True)
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 #  blokada klikania po koncu gry

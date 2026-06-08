@@ -26,6 +26,13 @@ current_difficulty = 3
 class MoveRequest(BaseModel):
     source: str
     target: str
+    difficulty: int | None = None
+    player_color: str | None = None
+
+
+class SettingsRequest(BaseModel):
+    difficulty: int | None = None
+    player_color: str | None = None
 
 
 class NewGameRequest(BaseModel):
@@ -78,6 +85,17 @@ async def new_game(req: NewGameRequest):
 
 @app.post("/api/move")
 async def make_move(move: MoveRequest):
+    global current_difficulty, ai_color
+    if move.difficulty is not None:
+        current_difficulty = move.difficulty
+    if move.player_color is not None:
+        if move.player_color == "both":
+            ai_color = None
+        elif move.player_color == "white":
+            ai_color = False
+        elif move.player_color == "black":
+            ai_color = True
+
     print(f"--- NOWY RUCH Z PRZEGLADARKI ---")
     print(f"Otrzymano tekstowo: z {move.source} na {move.target}")
 
@@ -103,6 +121,38 @@ async def make_move(move: MoveRequest):
         "status": "success",
         "fen": bridge.get_fen(),
         "game_over": state
+    }
+
+
+@app.post("/api/settings")
+async def update_settings(req: SettingsRequest):
+    global current_difficulty, ai_color
+    if req.difficulty is not None:
+        current_difficulty = req.difficulty
+    if req.player_color is not None:
+        if req.player_color == "both":
+            ai_color = None
+        elif req.player_color == "white":
+            ai_color = False
+        elif req.player_color == "black":
+            ai_color = True
+        elif req.player_color == "random":
+            import random as rand
+            chosen = rand.choice(["white", "black"])
+            ai_color = False if chosen == "white" else True
+
+    ai_moved = False
+    if not bridge.is_game_over() and ai_color is not None and bridge.white_to_move == ai_color:
+        bridge.make_ai_move(current_difficulty)
+        ai_moved = True
+
+    return {
+        "status": "success",
+        "fen": bridge.get_fen(),
+        "game_over": bridge.get_game_result() if bridge.is_game_over() else None,
+        "ai_moved": ai_moved,
+        "player_color": "both" if ai_color is None else ("black" if ai_color else "white"),
+        "difficulty": current_difficulty
     }
 
 
