@@ -23,6 +23,10 @@
             <span id="gameOverMsg"></span>
             <button id="restartBtn" onclick="showModePanel()">Nowa gra</button>
         </div>
+
+        <div id="gameStartBanner" class="game-start-banner" style="display:none;">
+            <span>Gra rozpoczęta!</span>
+        </div>
     </div>
 
     <div class="bar">
@@ -36,12 +40,20 @@
                 Chess960 (Fischer)
             </button>
 
+            <p class="panel-title" style="margin-top: 15px;">Poziom trudności AI</p>
+            <div class="difficulty-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                <button id="btnDiff0" class="diff-btn" style="padding: 8px 5px; font-size: 9pt;" onclick="selectDifficulty(0)">Extra Easy</button>
+                <button id="btnDiff1" class="diff-btn" style="padding: 8px 5px; font-size: 9pt;" onclick="selectDifficulty(1)">Easy</button>
+                <button id="btnDiff3" class="diff-btn active" style="padding: 8px 5px; font-size: 9pt;" onclick="selectDifficulty(3)">Medium</button>
+                <button id="btnDiff5" class="diff-btn" style="padding: 8px 5px; font-size: 9pt;" onclick="selectDifficulty(5)">Hard</button>
+                <button id="btnDiffBoth" class="diff-btn" style="grid-column: span 2; padding: 8px 5px; font-size: 9pt;" onclick="selectDifficulty('both')">Bez AI</button>
+            </div>
+
             <p class="panel-title" style="margin-top: 15px;">Twój kolor</p>
             <div class="color-options" style="display: flex; gap: 8px; margin-bottom: 10px;">
                 <button id="btnWhite" class="color-btn active" style="flex: 1; padding: 8px 5px; font-size: 9pt;" onclick="selectColor('white')">Białe</button>
                 <button id="btnBlack" class="color-btn" style="flex: 1; padding: 8px 5px; font-size: 9pt;" onclick="selectColor('black')">Czarne</button>
                 <button id="btnRandom" class="color-btn" style="flex: 1; padding: 8px 5px; font-size: 9pt;" onclick="selectColor('random')">Losowo</button>
-                <button id="btnBoth" class="color-btn" style="flex: 1; padding: 8px 5px; font-size: 9pt;" onclick="selectColor('both')">Bez AI</button>
             </div>
 
             <button class="start-btn" onclick="startNewGame()">Rozpocznij nową grę</button>
@@ -51,6 +63,7 @@
 
         <button onclick="saveGame()">Zapisz grę</button>
         <button onclick="loadGame()">Wczytaj grę</button>
+        <button onclick="endGame()" class="end-btn">Zakończ partię</button>
         <p id="statusMsg" class="status-msg"></p>
     </div>
 </main>

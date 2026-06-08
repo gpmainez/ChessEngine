@@ -19,6 +19,7 @@ templates = Jinja2Templates(directory="static")
 manager = GameManagerFactory.create("standard")
 bridge = GameInterfaceBridge(manager)
 ai_color = False
+current_difficulty = 3
 
 
 
@@ -30,6 +31,7 @@ class MoveRequest(BaseModel):
 class NewGameRequest(BaseModel):
     mode: str = "standard"
     player_color: str = "white"
+    difficulty: int = 3
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -46,10 +48,11 @@ async def get_modes():
 @app.post("/api/new_game")
 async def new_game(req: NewGameRequest):
     #   tworzy nowa gre z wybranym trybem przez fabryke
-    global manager, bridge, ai_color
+    global manager, bridge, ai_color, current_difficulty
     try:
         manager = GameManagerFactory.create(req.mode)
         bridge = GameInterfaceBridge(manager)
+        current_difficulty = req.difficulty
 
         #ustalenie koloru gracza i ai
         import random as rand
@@ -66,7 +69,7 @@ async def new_game(req: NewGameRequest):
 
         #ruch ai jesli gra jako pierwsze (biale) i ai jest wlaczone
         if ai_color == True:
-            bridge.make_ai_move(3)
+            bridge.make_ai_move(current_difficulty)
 
         return {"status": "success", "mode": req.mode, "player_color": chosen, "fen": bridge.get_fen()}
     except ValueError as e:
@@ -93,7 +96,7 @@ async def make_move(move: MoveRequest):
 
     #wykonaj ruch ai
     if ai_color is not None and bridge.white_to_move == ai_color:
-        bridge.make_ai_move(3)
+        bridge.make_ai_move(current_difficulty)
 
     state = bridge.get_game_result()
     return {
@@ -130,14 +133,15 @@ async def api_load():
 
         #   trigger ai move if needed
         if ai_color is not None and not bridge.is_game_over() and bridge.white_to_move == ai_color:
-            bridge.make_ai_move(3)
+            bridge.make_ai_move(current_difficulty)
 
         state = bridge.get_game_result()
         return {
             "status": "success",
             "fen": bridge.get_fen(),
             "game_over": state,
-            "player_color": "both" if ai_color is None else ("black" if ai_color else "white")
+            "player_color": "both" if ai_color is None else ("black" if ai_color else "white"),
+            "difficulty": current_difficulty
         }
     except Exception as e:
         return {"status": "error", "message": str(e)}

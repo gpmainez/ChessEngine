@@ -1,6 +1,7 @@
 var board = null;
 var selectedMode = 'standard';
 var selectedColor = 'white';
+var selectedDifficulty = 3;
 var gameOver = false;
 
 function setStatus(msg) {
@@ -13,19 +14,43 @@ function selectMode(mode) {
     document.getElementById('btnFisher').classList.toggle('active', mode === 'fisher');
 }
 
+function selectDifficulty(diff) {
+    selectedDifficulty = diff;
+    document.getElementById('btnDiff0').classList.toggle('active', diff === 0);
+    document.getElementById('btnDiff1').classList.toggle('active', diff === 1);
+    document.getElementById('btnDiff3').classList.toggle('active', diff === 3);
+    document.getElementById('btnDiff5').classList.toggle('active', diff === 5);
+    document.getElementById('btnDiffBoth').classList.toggle('active', diff === 'both');
+}
+
 function selectColor(color) {
     selectedColor = color;
     document.getElementById('btnWhite').classList.toggle('active', color === 'white');
     document.getElementById('btnBlack').classList.toggle('active', color === 'black');
     document.getElementById('btnRandom').classList.toggle('active', color === 'random');
-    document.getElementById('btnBoth').classList.toggle('active', color === 'both');
+}
+
+function triggerGameStartBanner() {
+    var banner = document.getElementById('gameStartBanner');
+    banner.style.display = 'flex';
+    banner.style.opacity = '1';
+    setTimeout(function() {
+        banner.style.opacity = '0';
+        setTimeout(function() {
+            banner.style.display = 'none';
+        }, 400);
+    }, 1000);
 }
 
 function startNewGame() {
+    var color = selectedColor;
+    if (selectedDifficulty === 'both') {
+        color = 'both';
+    }
     fetch('/api/new_game', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: selectedMode, player_color: selectedColor })
+        body: JSON.stringify({ mode: selectedMode, player_color: color, difficulty: selectedDifficulty === 'both' ? 3 : selectedDifficulty })
     })
     .then(r => r.json())
     .then(data => {
@@ -40,6 +65,7 @@ function startNewGame() {
             document.getElementById('gameOverBanner').style.display = 'none';
             var colName = data.player_color === 'white' ? 'białe' : (data.player_color === 'black' ? 'czarne' : 'Bez AI');
             setStatus('Nowa gra: ' + (selectedMode === 'fisher' ? 'Chess960' : 'standardowe') + ' (' + colName + ')');
+            triggerGameStartBanner();
         } else {
             setStatus('Blad: ' + data.message);
         }
@@ -98,8 +124,18 @@ function loadGame() {
                 board.position(d.fen);
                 if (d.player_color === 'black') {
                     board.orientation('black');
+                    selectColor('black');
+                } else if (d.player_color === 'white') {
+                    board.orientation('white');
+                    selectColor('white');
                 } else {
                     board.orientation('white');
+                    selectColor('white');
+                }
+                if (d.player_color === 'both') {
+                    selectDifficulty('both');
+                } else if (d.difficulty !== undefined) {
+                    selectDifficulty(d.difficulty);
                 }
                 gameOver = false;
                 document.getElementById('gameOverBanner').style.display = 'none';
@@ -112,6 +148,39 @@ function loadGame() {
             }
         });
 }
+
+
+function endGame() {
+    selectedMode = 'standard';
+    selectedColor = 'white';
+    selectedDifficulty = 3;
+    gameOver = false;
+
+    document.getElementById('btnStandard').classList.add('active');
+    document.getElementById('btnFisher').classList.remove('active');
+
+    selectDifficulty(3);
+    selectColor('white');
+
+    document.getElementById('gameOverBanner').style.display = 'none';
+
+    fetch('/api/new_game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'standard', player_color: 'white', difficulty: 3 })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') {
+            board.position('start');
+            board.orientation('white');
+            setStatus('Gra zakończona. Powrócono do ustawień początkowych.');
+        } else {
+            setStatus('Blad: ' + data.message);
+        }
+    });
+}
+
 
 var config = {
     draggable: true,
