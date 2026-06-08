@@ -126,7 +126,7 @@ def find_best_move(manager, depth: int) -> tuple[int, int] | None:
     best_move = None
     is_white = manager.board.white_to_move
     
-    #sortowanie ruchow na poczatek dla szybszego alpha beta
+    #shuffle ruchow na poczatek dla szybszego alpha beta
     random.shuffle(moves)
     
     if is_white:

@@ -59,6 +59,7 @@ DIFFICULTY_LEVELS = [
     {"name": "Easy", "desc": "minimax depth 1"},
     {"name": "Medium", "desc": "minimax depth 3"},
     {"name": "Hard", "desc": "minimax depth 5"},
+    {"name": "Bez AI", "desc": "ruch obydwoma kolorami (sam ze soba)"},
 ]
 
 #tryby gry dostepne w menu
@@ -72,7 +73,6 @@ COLOR_CHOICES = [
     {"color": "white",  "name": "Biale",  "desc": "zaczynasz gre jako pierwszy"},
     {"color": "black",  "name": "Czarne",  "desc": "komputer zaczyna gre jako pierwszy"},
     {"color": "random", "name": "Losowo",  "desc": "losowy wybor koloru"},
-    {"color": "both",   "name": "Bez AI",  "desc": "ruch obydwoma kolorami (sam ze soba)"},
 ]
 
 parse_dict = {'wp': "white_pawns", 'wr': "white_rooks", 'wn': "white_knights", 'wb': "white_bishops",
@@ -252,9 +252,9 @@ def draw_difficulty_menu(screen):
     mouse_pos = pygame.mouse.get_pos()
     btn_rects = []
     btn_w = 320
-    btn_h = 70
-    start_y = 120
-    gap = 15
+    btn_h = 55
+    start_y = 100
+    gap = 10
 
     for i, lvl in enumerate(DIFFICULTY_LEVELS):
         x = (WIDTH - btn_w) // 2
@@ -267,31 +267,35 @@ def draw_difficulty_menu(screen):
         pygame.draw.rect(screen, COLOR_MENU_TEXT, rect, width=2, border_radius=8)
 
         # nazwa poziomu
-        label = font_btn.render(f"{i} - {lvl['name']}", True, COLOR_MENU_TEXT)
-        label_rect = label.get_rect(center=(rect.centerx, rect.y + 25))
+        if lvl['name'] == "Bez AI":
+            label = font_btn.render(lvl['name'], True, COLOR_MENU_TEXT)
+        else:
+            label = font_btn.render(f"{i} - {lvl['name']}", True, COLOR_MENU_TEXT)
+        label_rect = label.get_rect(center=(rect.centerx, rect.y + 18))
         screen.blit(label, label_rect)
 
         #opis strategii
         desc = font_desc.render(lvl["desc"], True, (170, 170, 160))
-        desc_rect = desc.get_rect(center=(rect.centerx, rect.y + 50))
+        desc_rect = desc.get_rect(center=(rect.centerx, rect.y + 38))
         screen.blit(desc, desc_rect)
 
         btn_rects.append(rect)
 
-    #  hint na dole
-    hint = font_desc.render("kliknij aby wybrac poziom trudnosci", True, (130, 130, 120))
-    hint_rect = hint.get_rect(center=(WIDTH // 2, HEIGHT - 40))
-    screen.blit(hint, hint_rect)
+    back_rect = pygame.Rect((WIDTH - 150) // 2, HEIGHT - 50, 150, 35)
+    back_color = COLOR_MENU_HOVER if back_rect.collidepoint(mouse_pos) else COLOR_MENU_BTN
+    pygame.draw.rect(screen, back_color, back_rect, border_radius=8)
+    pygame.draw.rect(screen, COLOR_MENU_TEXT, back_rect, width=2, border_radius=8)
+    back_label = font_btn.render("Cofnij", True, COLOR_MENU_TEXT)
+    screen.blit(back_label, back_label.get_rect(center=back_rect.center))
 
     pygame.display.flip()
-    return btn_rects
+    return btn_rects, back_rect
 
 
 def difficulty_menu(screen, clock):
     #ekran wyboru trudnosci - blokuje do momentu wyboru
-    global current_difficulty
     while True:
-        btn_rects = draw_difficulty_menu(screen)
+        btn_rects, back_rect = draw_difficulty_menu(screen)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -299,13 +303,15 @@ def difficulty_menu(screen, clock):
                 sys.exit()
 
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if back_rect.collidepoint(event.pos):
+                    return "back"
                 for i, rect in enumerate(btn_rects):
                     if rect.collidepoint(event.pos):
+                        if i == 4:
+                            return "both"
                         # Map index to difficulty: 0 -> 0, 1 -> 1, 2 -> 3, 3 -> 5
                         diff_mapping = {0: 0, 1: 1, 2: 3, 3: 5}
-                        current_difficulty = diff_mapping[i]
-                        print(f"ai level set to {DIFFICULTY_LEVELS[i]['name']}")
-                        return
+                        return diff_mapping[i]
 
         clock.tick(30)
 
@@ -385,7 +391,7 @@ def draw_color_menu(screen):
     mouse_pos = pygame.mouse.get_pos()
     btn_rects = []
     btn_w, btn_h, gap = 320, 70, 15
-    start_y = 140
+    start_y = 130
 
     for i, col in enumerate(COLOR_CHOICES):
         x = (WIDTH - btn_w) // 2
@@ -404,43 +410,67 @@ def draw_color_menu(screen):
 
         btn_rects.append(rect)
 
-    hint = font_desc.render("kliknij aby wybrac kolor", True, (130, 130, 120))
-    screen.blit(hint, hint.get_rect(center=(WIDTH // 2, HEIGHT - 30)))
+    back_rect = pygame.Rect((WIDTH - 150) // 2, HEIGHT - 50, 150, 35)
+    back_color = COLOR_MENU_HOVER if back_rect.collidepoint(mouse_pos) else COLOR_MENU_BTN
+    pygame.draw.rect(screen, back_color, back_rect, border_radius=8)
+    pygame.draw.rect(screen, COLOR_MENU_TEXT, back_rect, width=2, border_radius=8)
+    back_label = font_btn.render("Cofnij", True, COLOR_MENU_TEXT)
+    screen.blit(back_label, back_label.get_rect(center=back_rect.center))
 
     pygame.display.flip()
-    return btn_rects
+    return btn_rects, back_rect
 
 
 def color_menu(screen, clock):
     #ekran wyboru koloru - ustawia globalne ai_color
-    global ai_color, vs_ai, flipped
     while True:
-        btn_rects = draw_color_menu(screen)
+        btn_rects, back_rect = draw_color_menu(screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if back_rect.collidepoint(event.pos):
+                    return "back"
                 for i, rect in enumerate(btn_rects):
                     if rect.collidepoint(event.pos):
-                        chosen = COLOR_CHOICES[i]["color"]
-                        if chosen == "white":
-                            vs_ai = True
-                            ai_color = False #ai jest czarne
-                        elif chosen == "black":
-                            vs_ai = True
-                            ai_color = True  #ai jest biale
-                        elif chosen == "random":
-                            vs_ai = True
-                            ai_color = random.choice([True, False])
-                        elif chosen == "both":
-                            vs_ai = False
-                            ai_color = None
-                        
-                        flipped = (vs_ai and ai_color == True)
-                        print(f"vs_ai set to {vs_ai}, ai color set to {ai_color}, flipped to {flipped}")
-                        return
+                        return COLOR_CHOICES[i]["color"]
         clock.tick(30)
+
+
+def setup_game_menu(screen, clock):
+    state = 1
+    global manager, bridge, current_difficulty, vs_ai, ai_color, flipped
+    while state < 4:
+        if state == 1:
+            mode_menu(screen, clock)
+            state = 2
+        elif state == 2:
+            res = difficulty_menu(screen, clock)
+            if res == "back":
+                state = 1
+            elif res == "both":
+                vs_ai = False
+                ai_color = None
+                flipped = False
+                state = 4
+            else:
+                vs_ai = True
+                current_difficulty = res
+                state = 3
+        elif state == 3:
+            res = color_menu(screen, clock)
+            if res == "back":
+                state = 2
+            else:
+                if res == "white":
+                    ai_color = False
+                elif res == "black":
+                    ai_color = True
+                else:
+                    ai_color = random.choice([True, False])
+                flipped = (vs_ai and ai_color == True)
+                state = 4
 
 
 def choose_promotion(screen, color_prefix, clock):
@@ -526,9 +556,7 @@ def main():
     loadImages()
 
     # najpierw wybor trybu gry potem trudnosci i koloru
-    mode_menu(screen, clock)
-    difficulty_menu(screen, clock)
-    color_menu(screen, clock)
+    setup_game_menu(screen, clock)
 
     #   wykonaj ruch ai jesli gra jako pierwsze (biale)
     if vs_ai and bridge.white_to_move == ai_color:
@@ -551,9 +579,7 @@ def main():
                     computer_last_move = None
                     legal_moves_to_draw = []
                     game_over_state = None
-                    mode_menu(screen, clock)
-                    difficulty_menu(screen, clock)
-                    color_menu(screen, clock)
+                    setup_game_menu(screen, clock)
                     if vs_ai and bridge.white_to_move == ai_color:
                         do_ai_move(screen, clock)
                     continue
