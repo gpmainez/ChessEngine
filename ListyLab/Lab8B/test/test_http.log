@@ -1,6 +1,0 @@
-#fields	ts	uid	id.orig_h	id.orig_p	id.resp_h	id.resp_p	trans_depth	method	host	uri	referrer	user_agent	request_body_len	response_body_len	status_code	status_msg
-1625097600.123	C12345ABC	192.168.1.15	50123	172.217.16.14	80	1	GET	www.google.com	/search?q=python	-	Mozilla/5.0	0	15432	200	OK
-1625097605.456	C67890DEF	192.168.1.20	50124	104.26.10.23	443	1	GET	pyqt.org	/static/styles.css	https://pyqt.org	Mozilla/5.0	0	4500	200	OK
-1625097610.789	G98765HIJ	10.0.0.5	49210	52.142.124.21	80	1	POST	api.weather.com	/v1/forecast	-	curl/7.68.0	124	1024	201	Created
-1625097615.000	K55555LLL	192.168.1.50	58201	185.199.108.153	80	1	OPTIONS	-	-	-	Mozilla/5.0	0	0	204	No Content
-1625097620.111	M22222NNN	192.168.1.15	50125	31.13.80.36	443	1	GET	www.facebook.com	/home.php	-	Mozilla/5.0	0	25000	200	OK
