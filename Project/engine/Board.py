@@ -344,7 +344,7 @@ class Board:
         ranks_part = "/".join(fen_rows)
         to_move = "w" if self.white_to_move else "b"
 
-        #  generate castling rights
+
         castle_str = ""
         if self.castling_rights & 0b0001:
             castle_str += "K"

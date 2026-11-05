@@ -1,12 +1,15 @@
+from ListyLab.Lab1.import_books import f
+
+
 def precompute_moves(move_vector):
     moves = [0] * 64
     for square in range(64):
-        row = square // 8
-        file = square % 8
+        r = square // 8
+        f = square % 8
         mask = 0
         for x_jump, y_jump in move_vector:
-            row_j = row + x_jump
-            file_j = file + y_jump
+            row_j = r + x_jump
+            file_j = f + y_jump
             if 0 <= row_j <= 7 and 0 <= file_j <= 7:
                 square_j = row_j * 8 + file_j
                 mask = mask | (1 << square_j)
