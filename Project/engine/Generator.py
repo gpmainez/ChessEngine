@@ -1,5 +1,4 @@
-from ListyLab.Lab1.import_books import f
-
+﻿
 
 def precompute_moves(move_vector):
     moves = [0] * 64
